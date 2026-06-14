@@ -194,30 +194,24 @@ class ClientParser {
     final DartObject verbValue = verbValueOpt;
 
     // The `path` field is defined on the `HttpVerb`
-    // base class and stored on the annotation
-    // instance. In some analyzer / SDK combos
-    // `DartObject.getField('path')` returns null for
-    // inherited fields when the annotation is a
-    // subclass instance (e.g. `HttpGet`). We
-    // therefore also try the first positional
-    // argument of the annotation's constructor
-    // (since `@HttpGet('/items/{id}')` passes the
-    // path as a positional arg to the super
-    // constructor).
+    // base class. `DartObject.getField('path')`
+    // sometimes returns null on inherited fields
+    // when the annotation is a subclass instance
+    // (e.g. `HttpGet`). As a last-resort fallback
+    // (after also trying the constructor's
+    // children, which can be initializers rather
+    // than parameters in analyzer 8.4.0), parse
+    // the first positional argument out of the
+    // annotation's textual representation. The
+    // toString of a const annotation instance is
+    // well-defined: `ClassName(arg1, arg2)`.
     String verbPath = _readStringOrEmpty(verbValue, 'path');
     if (verbPath.isEmpty) {
-      final Element? annotationElement = verbMeta.element;
-      if (annotationElement != null) {
-        for (final Element child in annotationElement.children) {
-          final DartObject? argValue = verbValue.getField(child.name!);
-          if (argValue != null && !argValue.isNull) {
-            final String? s = argValue.toStringValue();
-            if (s != null && s.isNotEmpty) {
-              verbPath = s;
-              break;
-            }
-          }
-        }
+      final String repr = verbValue.toString();
+      final RegExpMatch? m = RegExp(r"^\s*[A-Za-z_][A-Za-z_0-9]*\s*\(\s*'([^']*)'")
+          .firstMatch(repr);
+      if (m != null) {
+        verbPath = m.group(1) ?? '';
       }
     }
     final Map<String, String> methodHeaders =

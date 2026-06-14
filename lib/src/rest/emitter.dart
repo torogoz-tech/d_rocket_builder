@@ -37,6 +37,20 @@ String emitClient(ParsedClient client) {
   }
 
   buffer.writeln('}');
+
+  // The central `d_rocket_registry.g.dart` emits
+  // `register<ClassName>RestClient()` for every
+  // `@RestClient` class it discovers (see
+  // `record_registry_builder.dart`). That function
+  // must exist in THIS part file (it's the part
+  // that "owns" the class), so the registry's call
+  // resolves. We emit it here, returning the
+  // factory `create()`.
+  buffer.writeln();
+  buffer.writeln(
+      '${client.className} register${client.className}RestClient() =>');
+  buffer.writeln('    _\$${client.className}.create();');
+
   return buffer.toString();
 }
 

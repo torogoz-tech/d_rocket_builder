@@ -5,6 +5,75 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] — 2026-06-14
+
+Patch release. **Three bug fixes** in the REST
+and realtime codegen, captured in the
+`FinanzasPersonales` consumer project.
+
+* **REST: `register<ClassName>RestClient()` is
+  now emitted by the REST emitter.** The
+  central `d_rocket_registry.g.dart` calls
+  `register<RestProbe>RestClient()` for every
+  `@RestClient` class it discovers (see
+  `record_registry_builder.dart:301`). 1.0.6's
+  emitter was only emitting the `_$RestProbe`
+  class — the function the registry called did
+  not exist anywhere. Dart failed with
+  `Method not found: 'registerRestProbeRestClient'`.
+  The emitter now emits
+  `RestProbe registerRestProbeRestClient() => _$RestProbe.create();`
+  at the bottom of the part file, which is
+  exactly what the registry expects.
+
+* **REST: `path` is now read correctly from
+  positional constructor args.** 1.0.5's fix
+  used `Element.children`, which in analyzer
+  8.4.0 returns the constructor's
+  **initializers**, not its **parameters**.
+  For `@HttpGet('/items/{id}')` the children
+  list was empty (or contained unrelated
+  initializers), so the path stayed empty.
+  The new fallback parses the first quoted
+  string argument out of the annotation's
+  `toString()` representation, which is the
+  well-defined `ClassName('arg1', 'arg2')`
+  form for a const annotation. So
+  `@HttpGet('/items/{id}')` correctly yields
+  `verbPath = '/items/{id}'`, and the
+  generated `RestRequest` now has
+  `path: '/api/items/{id}'` (with the
+  class-level `@Route('/api')` prefix from
+  the emitter concatenated).
+
+* **Realtime: `register<ClassName>WebSocketClient()`
+  now returns the user's class, not
+  `WebSocketClient`.** The function was
+  declared as
+  `WebSocketClient register<...>WebSocketClient() => _$className();`
+  but `_$className` extends `IOWebSocketClient`,
+  which is NOT assignable to `WebSocketClient`
+  in all configurations. The fix changes the
+  return type to `$className` (the user's
+  abstract class) and adds
+  `implements $className` to the `_$className`
+  class declaration (it was only `extends
+  IOWebSocketClient` before, which meant the
+  generated class didn't actually implement
+  the user's interface, and the registry
+  call's return type was unchecked). Same
+  fix applied to the SSE generator.
+
+This closes the codegen chain entirely:
+
+| Ver   | Fix                                                  |
+|-------|------------------------------------------------------|
+| 1.0.3 | TPH lonely comma                                     |
+| 1.0.4 | `\$` escapes, `required` on positional, `});`        |
+| 1.0.5 | angle brackets in dartdoc, `prefer_isNotEmpty`       |
+| 1.0.6 | double `part of`                                     |
+| 1.0.7 | REST `register*`, REST path arg, realtime return type |
+
 ## [1.0.6] — 2026-06-14
 
 Patch release. **Bug fix** for the REST client

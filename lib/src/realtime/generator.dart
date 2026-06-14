@@ -45,7 +45,7 @@ class WebSocketClientGenerator
     }
     final String headersLiteral = _headersLiteral(headers);
     return '''
-class _\$\$$className extends IOWebSocketClient {
+class _\$\$$className extends IOWebSocketClient implements $className {
   _\$\$$className() : super();
 
   ///  (codegen): the URL baked
@@ -62,7 +62,7 @@ class _\$\$$className extends IOWebSocketClient {
       connect(Uri.parse(url), headers: headers);
 }
 
-WebSocketClient register${className}WebSocketClient() =>
+${className} register${className}WebSocketClient() =>
     _\$\$$className();
 ''';
   }
@@ -99,7 +99,7 @@ class SseClientGenerator extends GeneratorForAnnotation<SseClient> {
     }
     final String headersLiteral = _headersLiteral(headers);
     return '''
-class _\$\$$className extends HttpSseClient {
+class _\$\$$className extends HttpSseClient implements $className {
   _\$\$$className() : super();
 
   ///  (codegen): the URL baked
@@ -116,7 +116,7 @@ class _\$\$$className extends HttpSseClient {
       connect(Uri.parse(url), headers: headers);
 }
 
-SseClient register${className}SseClient() =>
+${className} register${className}SseClient() =>
     _\$\$$className();
 ''';
   }
