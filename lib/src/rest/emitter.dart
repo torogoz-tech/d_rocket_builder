@@ -14,8 +14,15 @@ String emitClient(ParsedClient client) {
   buffer.writeln();
   buffer.writeln('// ignore_for_file: type=lint, prefer_single_quotes');
   buffer.writeln();
-  buffer.writeln("part of '${_toSnakeCase(client.className)}.dart';");
-  buffer.writeln();
+  // NOTE: do NOT emit `part of '...';` here.
+  // The builder is wired with `PartBuilder` in
+  // `build.yaml` (d_rocket_builder:rest_client),
+  // which automatically prepends the
+  // `part of '<source>.dart';` directive.
+  // Emitting it manually would produce a
+  // double `part of` and Dart would refuse to
+  // compile with: "Only one part-of directive
+  // may be declared in a file."
 
   // === Concrete class ===
   buffer.writeln('class _\$${client.className} implements ${client.className} {');
@@ -185,18 +192,4 @@ String _escape(String value) {
 
 String _durationLiteral(Duration d) {
   return 'Duration(microseconds: ${d.inMicroseconds})';
-}
-
-String _toSnakeCase(String input) {
-  final StringBuffer result = StringBuffer();
-  for (int i = 0; i < input.length; i++) {
-    final int code = input.codeUnitAt(i);
-    if (code >= 65 && code <= 90) {
-      if (i > 0) result.write('_');
-      result.write(String.fromCharCode(code + 32));
-    } else {
-      result.write(input[i]);
-    }
-  }
-  return result.toString();
 }

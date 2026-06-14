@@ -5,6 +5,54 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] — 2026-06-14
+
+Patch release. **Bug fix** for the REST client
+codegen emitting a **double `part of`**
+directive in the generated
+`*.d_rocket_rest_client.g.dart` file. Captured
+in `FinanzasPersonales` consumer project and
+diagnosed correctly by `@torogoz-tech`.
+
+* **Removed the manual `part of '...';` from
+  the REST emitter** (`lib/src/rest/emitter.dart`,
+  formerly line 17). The
+  `d_rocket_builder:rest_client` builder is
+  wired with `PartBuilder` in `build.yaml`
+  (lines 53-56), which **already prepends** the
+  `part of '<source>.dart';` directive
+  automatically. Emitting it manually produced
+  two `part of` lines in the same file, and
+  Dart rejects that with:
+  `Only one part-of directive may be declared
+  in a file.`
+  Removed the manual emission; `PartBuilder`
+  now does it correctly.
+
+* **Removed the now-unused `_toSnakeCase`
+  helper** (the only call site was the deleted
+  `part of` line). The analyzer was warning
+  `unused_element` after the manual `part of`
+  was removed.
+
+This is the final piece of the REST codegen
+fix chain (1.0.3: TPH comma, 1.0.4: `\$` and
+`required` and `});`, 1.0.5: analyzer-safe
+path fallback and dartdoc brackets, 1.0.6:
+double `part of`). With this release, the
+generated `rest_probe.d_rocket_rest_client.g.dart`
+should compile cleanly on a fresh consumer
+build for any `@RestClient` whose method
+paths are either:
+  * `@HttpGet('/items/{id}')` (positional
+    constructor arg), or
+  * `@HttpGet(path: '/items/{id}')` (named
+    constructor arg).
+
+Pana score after 1.0.6: **150/160** (unchanged
+from 1.0.5 — the double `part of` is a
+codegen-output bug that pana does not detect).
+
 ## [1.0.5] — 2026-06-14
 
 Patch release. Two lint fixes (pana
