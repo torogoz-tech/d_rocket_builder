@@ -44,8 +44,8 @@ bool hasSerializableAnnotation(ClassElement cls) {
 /// Returns the class names (sorted, deduplicated) of every
 /// `@Serializable` class declared in the given [library].
 ///
-/// Generic classes (`class Foo<T>`) are skipped here — the
-/// codegen for generic classes requires explicit `register<X>Foo<T>()`
+/// Generic classes (`class Foo[T]`) are skipped here — the
+/// codegen for generic classes requires explicit `register[X>Foo<T]()`
 /// calls from the user because type parameters are erased at
 /// runtime, so emitting an automatic registration would produce
 /// a `Serializer.register[Foo[T]]` that always fails at runtime.

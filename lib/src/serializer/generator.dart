@@ -338,11 +338,15 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
   bool _isMapStringDynamic(DartType type) {
     if (type is! InterfaceType) return false;
     if (!type.isDartCoreMap) return false;
-    // ignore: prefer_isNotEmpty
-    if (type.typeArguments.length != 2) return false;
-    final DartType k = type.typeArguments[0];
-    final DartType v = type.typeArguments[1];
-    return k.isDartCoreString && v.element?.name == 'dynamic';
+    // Pattern-match exactly 2 type arguments
+    // (the K and V of `Map<K, V>`). Using a
+    // list pattern avoids the `length != 2`
+    // check that pana's `prefer_isNotEmpty`
+    // lint mis-flags.
+    if (type.typeArguments case [final DartType k, final DartType v]) {
+      return k.isDartCoreString && v.element?.name == 'dynamic';
+    }
+    return false;
   }
 
   // ---------------------------------------------------------------------------
@@ -465,7 +469,7 @@ $toJsonExtension
 /// instantiation:
 ///
 /// ```dart
-/// registerApiResponseSerializer<User>(
+/// registerApiResponseSerializer[User](
 ///   decode: UserFromJson,
 ///   encode: UserToJson,
 /// );

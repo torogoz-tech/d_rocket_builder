@@ -5,7 +5,7 @@
 /// `d_rocket_builder/lib/src/record_registry_builder.dart`)
 /// to detect which classes in the consumer's `lib/**.dart`
 /// are `@Table` and therefore need a
-/// `register<X>EntityMeta()` call emitted into the central
+/// `register[X]EntityMeta()` call emitted into the central
 /// `initializeD()`.
 library d_rocket_builder.orm.registry;
 

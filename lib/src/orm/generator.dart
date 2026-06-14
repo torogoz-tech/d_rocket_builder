@@ -7,7 +7,7 @@ import 'package:source_gen/source_gen.dart';
 
 /// Codegen for `@Table` entities. Emits a per-class
 /// static `EntityMeta entityMeta` plus a
-/// `register<Class>EntityMeta()` helper that the central
+/// `register[Class]EntityMeta()` helper that the central
 /// `initializeD()` calls.
 ///
 /// Moved into `d_rocket_builder` under ("ORM") of the
@@ -266,7 +266,7 @@ void register${className}EntityMeta() {
 ''';
   }
 
-  /// .b: emit a `_<Class>Navigation` extension
+  /// .b: emit a `_[Class]Navigation` extension
   /// that exposes the navigation getters. The getters
   /// read from the global `NavigationRegistry`, which
   /// the framework populates after a fetch or `.include_`.
@@ -275,7 +275,7 @@ void register${className}EntityMeta() {
   /// ```dart
   /// extension _$OrderNavigation on Order {
   ///   Customer? get customer =>
-  ///       NavigationRegistry.get<Customer>(this, 'customer');
+  ///       NavigationRegistry.get[Customer](this, 'customer');
   /// }
   /// ```
   ///
@@ -308,11 +308,11 @@ void register${className}EntityMeta() {
         '}\n';
   }
 
-  /// .f: emit a `_<Class>DbSetIncludes`
+  /// .f: emit a `_[Class]DbSetIncludes`
   /// extension that provides typed
-  /// `.include_<T>()` methods per navigation. The
+  /// `.include_[T]()` methods per navigation. The
   /// user can call `.include_customer()` instead
-  /// of `.include_<Customer>('customer', Customer.entityMeta)`.
+  /// of `.include_[Customer]('customer', Customer.entityMeta)`.
   ///
   /// **MVP**: target type is `dynamic` (the codegen
   /// resolves the actual type in a follow-up using
@@ -427,7 +427,7 @@ void register${className}EntityMeta() {
     return n[0].toLowerCase() + n.substring(1);
   }
 
-  ///: emits a `wire<Root>EntityMeta`
+  ///: emits a `wire[Root]EntityMeta`
   /// helper that builds the root's `subclassMetas`
   /// map by referencing the children's static
   /// `entityMeta` extensions. Returns the empty
