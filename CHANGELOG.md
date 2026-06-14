@@ -5,6 +5,61 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.11] — 2026-06-14
+
+Patch release. **The actual path-concatenation
+fix** — diagnoses by `@torogoz-tech` of the
+1.0.7 → 1.0.8 → 1.0.9 → 1.0.10 attempt
+chain. All previous "fixes" were wrong.
+
+* **The real bug**: `HttpGet` extends `HttpVerb`
+  and uses `super.path` (positional super
+  parameter) to forward the path to the
+  parent. Analyzer represents this as:
+  ```
+  HttpGet ((super) = HttpVerb (path = String ('/items/{id}'), headers = {...}))
+  ```
+  So `verbValue.getField('path')` returns null
+  — the field is on the `(super)` sub-object,
+  not on the `HttpGet` instance itself.
+  Every previous fix (positional field name
+  probes, regex on toString) was looking in
+  the wrong place.
+
+  The fix is one line: when `getField('path')`
+  returns null, look in `(super)`:
+  ```dart
+  final superValue = verbValue.getField('(super)');
+  if (superValue != null) {
+    verbPath = _readStringOrEmpty(superValue, 'path');
+  }
+  ```
+
+* **Same fix applied to `headers`**, which
+  has the same `(super)` layout. Without
+  this, `@HttpGet('/x', headers: {...})`
+  would lose the method-level headers.
+
+* **Removed the now-unnecessary regex
+  fallback** (it never matched anyway —
+  analyzer's toString for the `(super)`
+  layout doesn't include `path: <value>`).
+  Kept as a defensive `if (verbPath.isEmpty)`
+  safety net for future SDK changes.
+
+* **Removed the `_readStringOrEmptyOrNull`
+  helper** that 1.0.10's first draft
+  referenced but didn't define. The actual
+  fix uses the existing
+  `_readStringOrEmpty` helper (empty string
+  for "not found" is fine — an empty path
+  is invalid anyway).
+
+Discovered by `@torogoz-tech` after
+testing 1.0.10 in `FinanzasPersonales`
+and observing the actual analyzer
+representation in the `.pub-cache`.
+
 ## [1.0.10] — 2026-06-14
 
 Patch release. **pana score fix**: 130/160 →

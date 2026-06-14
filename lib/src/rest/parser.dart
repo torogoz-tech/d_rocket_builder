@@ -195,43 +195,38 @@ class ClientParser {
 
     // The `path` field is defined on the `HttpVerb`
     // base class. `DartObject.getField('path')`
-    // sometimes returns null on inherited fields
-    // when the annotation is a subclass instance
-    // (e.g. `HttpGet`). As fallbacks:
-    //   1. Try the well-known positional field
-    //      names analyzer uses for inherited
-    //      positional args.
-    //   2. Parse the `path: '...'` token out of
-    //      the annotation's `toString()` form,
-    //      which is `ClassName(path: /value, headers: {...})`
-    //      for a const annotation. (1.0.7's regex
-    //      expected `ClassName('/value')` with
-    //      quotes, which is the wrong shape for
-    //      analyzer's toString.)
+    // returns null on a subclass instance (e.g.
+    // `HttpGet`) because analyzer represents the
+    // inheritance like this:
+    //   HttpGet ((super) = HttpVerb (path = ..., headers = ...))
+    // So the field is reached via
+    //   verbValue.getField('(super)')?.getField('path')
+    //
+    // Discovered by @torogoz-tech after 1.0.10.
+    // The previous regex-based fallback (1.0.7
+    // -> 1.0.8 -> 1.0.9) was wrong: analyzer
+    // doesn't actually emit `path: <value>` in
+    // the toString for the (super) layout.
     String verbPath = _readStringOrEmpty(verbValue, 'path');
     if (verbPath.isEmpty) {
-      // Try common positional field names.
-      for (final String name in <String>['path', 'positional_0', '_path']) {
-        final DartObject? v = verbValue.getField(name);
-        if (v != null && !v.isNull) {
-          final String? s = v.toStringValue();
-          if (s != null && s.isNotEmpty) {
-            verbPath = s;
-            break;
-          }
-        }
+      // PRIMARY FIX: look in (super) for the
+      // inherited field. This is the actual
+      // analyzer representation for
+      // `@HttpGet('/items/{id}')` because
+      // `HttpGet` uses `super.path` to pass the
+      // positional arg to the parent.
+      final DartObject? superValue = verbValue.getField('(super)');
+      if (superValue != null) {
+        verbPath = _readStringOrEmpty(superValue, 'path');
       }
     }
     if (verbPath.isEmpty) {
-      // Parse `path: <value>` out of the
-      // annotation's toString. The format is
-      //   HttpGet(path: /items/{id}, headers: {})
-      // — value is unquoted, ends at `,` or `)`.
-      // The path is INCLUDED in the capture
-      // group (the `/` is the first char of
-      // the group, not a delimiter outside it —
-      // 1.0.8 had it outside, which dropped
-      // the leading slash from every path).
+      // Last-resort fallback: parse `path: <value>`
+      // from the annotation's toString. Same regex
+      // as 1.0.9 (the leading-slash capture group
+      // bug is fixed there). Kept as a safety net
+      // in case analyzer's representation changes
+      // in a future SDK.
       final String repr = verbValue.toString();
       final RegExpMatch? m = RegExp(
               r"path\s*:\s*(?:'([^']*)'|(\/[^,)]+))")
@@ -240,8 +235,18 @@ class ClientParser {
         verbPath = m.group(1) ?? m.group(2) ?? '';
       }
     }
-    final Map<String, String> methodHeaders =
+    // `headers` has the same (super) layout
+    // problem as `path` (see comment above for
+    // details). Look in (super) if not found
+    // at the top level.
+    Map<String, String> methodHeaders =
         _readStringMap(verbValue, 'headers');
+    if (methodHeaders.isEmpty) {
+      final DartObject? superValue = verbValue.getField('(super)');
+      if (superValue != null) {
+        methodHeaders = _readStringMap(superValue, 'headers');
+      }
+    }
 
     // Detectar retorno: el método retorna Future<T> o FutureOr<T> o nada.
     final DartType returnType = method.returnType;
