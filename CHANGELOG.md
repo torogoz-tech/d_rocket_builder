@@ -5,104 +5,48 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] — 2026-06-12 — First stable release
+## [1.0.0] — 2026-06-14
 
-The first stable release of `d_rocket_builder`. The codegen
-output is now considered stable: re-running the generator
-on an unchanged source file produces a byte-identical
-`*.g.dart`, and the public API of the generated registry
-(`initializeD()`) is frozen within the `1.x` series.
+First stable release. `d_rocket_builder` is the
+`build_runner` codegen companion to
+[`d_rocket` 1.0.x](https://pub.dev/packages/d_rocket).
 
-This release ships the codegen pipeline that supports
-[`d_rocket` 1.0.0](../d_rocket/CHANGELOG.md). It includes
-the four builder phases, two custom lint rules, the
-migration scaffolder CLI, and the closure-sugar translator.
+It ships seven builders, wired in by adding
+`d_rocket_builder` as a `dev_dependency` and
+including a `build.yaml` (the
+[`d_rocket` docs](https://github.com/torogoz-tech/d_rocket/blob/main/packages/d_rocket/doc/01-overview.md)
+have the canonical template):
 
-### Added
+| Builder | Output suffix | Purpose |
+|---|---|---|
+| `d_rocket_builder:record` | `.g.dart` | `@Table` / `extends Record` classes → field accessor registry |
+| `d_rocket_builder:serializer` | `.d_rocket_serializer.g.dart` | `@Serializable` classes → `fromJson` / `toJson` |
+| `d_rocket_builder:rest_client` | `.d_rocket_rest_client.g.dart` | `@RestClient` classes → typed `get` / `post` / `put` / `delete` |
+| `d_rocket_builder:rocket_table` | `.d_rocket_orm.g.dart` | `@Table` classes → CRUD scaffold + change tracking |
+| `d_rocket_builder:record_registry` | `d_rocket_registry.g.dart` | central `initializeD()` that registers all of the above |
+| `d_rocket_builder:realtime` | `.d_rocket_realtime.g.dart` | `@WebSocketRoute` / `@SseRoute` classes → connection scaffolds |
+| `d_rocket_builder:custom_lint` | n/a | two custom_lint rules: `d_rocket_closure` (LINQ naming) and `d_rocket_n_plus_one` (eager-load detection) |
 
-- **`d_rocket:rocket_serializer` builder** — emits per-class
-  `fromJson` and `toJson` for every `@Serializable()`-annotated
-  class, plus a central `register<X>Serializer` call in
-  `d_rocket_registry.g.dart`. Supports:
-  - `JsonNaming` policies (`none`, `snakeCase`, `camelCase`,
-    `kebabCase`, `pascalCase`).
-  - `UnknownKeyPolicy` (`ignore` default, `strict`,
-    `capture`).
-  - `@JsonKey(name: ..., ignore: ..., requiredKey: ...,
-    defaultValue: ..., converter: ..., useEnumIndex: ...,
-    unknownEnumValue: ...)` per-field overrides.
-  - `Format` (class, not enum): `Format.trim()`,
-    `Format.uppercase()`, `Format.lowercase()`,
-    `Format.date('yyyy-MM-dd' | 'iso8601')`,
-    `Format.custom(name)`, `Format.customWith(type)`.
-  - `@SerializableUnion` for sealed sum types with
-    discriminator dispatch.
+## Compatibility
 
-- **`d_rocket:rocket_rest_client` builder** — emits per-
-  interface `RestClient` implementations with the full
-  interceptor chain, retry / backoff, rate limiting, and
-  circuit breaker wired in. Supports:
-  - `@HttpGet` / `@HttpPost` / `@HttpPut` / `@HttpPatch` /
-    `@HttpDelete` / `@HttpHead`.
-  - Parameter binding: `@Path`, `@Query`, `@Header`, `@Body`,
-    `@Field`, `@Part`, `@RawBody`.
-  - Streaming `Stream<T>` return types.
-  - `CancelToken` for cancellable requests.
-  - `MockHttpClient` integration for tests.
+| `d_rocket_builder` | `d_rocket` |
+|---|---|
+| `1.0.0` | `^1.0.0` (1.0.0, 1.0.1, 1.0.2 — all compatible) |
 
-- **`d_rocket:rocket_table` builder** — emits per-class
-  `fromRow` (row materialiser) and `setId` (back-propagation
-  hook) closures for every `@RocketTable`-annotated entity.
-  Inspects each field's Dart type and `@Column(nullable: ...)`
-  flag to decide whether the cast is `T?` (nullable columns)
-  or `T? ?? <default>` (non-nullable columns with a
-  defensive default). Also generates `BazSchema` constants
-  (table name, column names) for the SQL provider.
+## Notes
 
-- **`d_rocket:rocket_closure` builder** *(optional)* —
-  emits closure-sugar `where` / `select` / `orderBy` /
-  `groupBy` extensions for prototyping over `Iterable<T>`.
-  Translation: closure calls to LINQ operators are rewritten
-  to use the same `Expr` tree as the type-safe version, so
-  the query can be pushed to SQL in the future without
-  rewriting the call sites.
-
-- **`d_rocket:rocket_migration` CLI** — `dart run
-  d_rocket:rocket_migration add <name>` scaffolds a new
-  migration with the right id, class name, and pre-filled
-  `up()` / `down()` bodies. `dart run d_rocket:rocket_migration
-  doctor` validates that the migration history is contiguous
-  (no gaps).
-
-- **Custom lint rules** (via `package:custom_lint_builder`):
-  - `d_rocket_n_plus_one` — flags LINQ queries that
-    trigger N+1 round-trips. Promotes `include_<T>()` and
-    pre-fetch.
-  - `d_rocket_closure` — flags LINQ operators used on raw
-    `Iterable<T>` without an `Expr` (these evaluate in-memory
-    only and can't be pushed to SQL).
-
-- **Central `d_rocket_registry.g.dart`** — the single
-  generated file that imports every `*.d_rocket_*.g.dart` in
-  the project and registers them all in one `initializeD()`
-  call.
-
-### Migration from `d_serializer_builder` / `d_rest_builder` 0.x
-
-- `d_serializer_builder` 0.4.0 was absorbed into
-  `d_rocket_builder 1.0`. Replace
-  `package:d_serializer_builder/d_serializer_builder.dart`
-  with `package:d_rocket_builder/d_rocket_builder.dart`.
-  The `@Serializable()` annotation is unchanged; the
-  generated file suffix changed from
-  `*.d_serializer.g.dart` to `*.d_rocket_serializer.g.dart`.
-
-- `d_rest_builder` 0.1.0 was absorbed into
-  `d_rocket_builder 1.0`. The `@RestClient` annotation is
-  unchanged; the generated file suffix changed from
-  `*.d_rest_client.g.dart` to
-  `*.d_rocket_rest_client.g.dart`.
-
-### License
-
-© Torogoz Tech. Released under the MIT License.
+* The codegen output **does not** need to be
+  re-published when the consumer's app changes —
+  it is regenerated locally with
+  `dart run build_runner build --delete-conflicting-outputs`.
+* The central `d_rocket_registry.g.dart` is
+  always emitted at the package root of the
+  consumer's project (one per project, not one
+  per package). Call `initializeD()` once at
+  application startup.
+* The `record_registry` builder only scans the
+  consumer's `lib/**.dart` for `extends Record`
+  classes. Examples that live under `example/`
+  need to be generated in a separate project
+  (see the d_rocket CHANGELOG for the v1.0.1
+  workflow).
