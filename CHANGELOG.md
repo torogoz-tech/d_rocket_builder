@@ -5,6 +5,56 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] — 2026-06-14
+
+Patch release. **Bug fix** for the REST path
+fallback introduced in 1.0.8 — the regex
+**dropped the leading `/` from every path**.
+
+* **REST path fallback: 1.0.8's regex
+  consumed the leading `/` as a delimiter,
+  outside the capture group.** The pattern
+  was `(?:'([^']*)'|/([^,)]+))` — the `/`
+  in the second alternative was a literal
+  slash matched by the regex engine, but it
+  was OUTSIDE the capture group `[^,)]+`,
+  so it was consumed and discarded. Result:
+  for `@HttpGet('/api/items/{id}/view')`
+  the captured path was `api/items/{id}/view`
+  (no leading `/`). When concatenated with
+  the class-level `@Route('/api')` prefix
+  in the emitter, the full path became
+  `/apiapi/items/{id}/view` — a malformed
+  URL with no slash between the two segments.
+
+  The fix moves the `/` INSIDE the capture
+  group:
+  `(?:'([^']*)'|(\/[^,)]+))`
+  Now the second alternative matches a
+  literal `/` followed by one-or-more
+  non-`,`-non-`)` chars, and the leading
+  slash is part of the captured value.
+
+  Test matrix (all pass after the fix):
+    /items/{id}
+    /api/items/{id}/view
+    /api/v2/users/{id}/posts/{postId}
+    /items?page=1&size=20
+    /items:1
+
+  The single edge case that still breaks is
+  a path that contains a literal `)` (e.g.
+  `/items(view)`) — the `)` is interpreted
+  as the closing paren of the annotation.
+  This is not a real-world case (parens in
+  URL paths must be percent-encoded as
+  `%28` / `%29` per RFC 3986) so it is left
+  as a known limitation of the toString-
+  parsing fallback. The primary
+  `getField('path')` path does NOT have this
+  limitation; it would handle parens
+  correctly if analyzer exposed the field.
+
 ## [1.0.8] — 2026-06-14
 
 Patch release. **Bug fix** for the REST path

@@ -227,9 +227,14 @@ class ClientParser {
       // annotation's toString. The format is
       //   HttpGet(path: /items/{id}, headers: {})
       // — value is unquoted, ends at `,` or `)`.
+      // The path is INCLUDED in the capture
+      // group (the `/` is the first char of
+      // the group, not a delimiter outside it —
+      // 1.0.8 had it outside, which dropped
+      // the leading slash from every path).
       final String repr = verbValue.toString();
       final RegExpMatch? m = RegExp(
-              r"path\s*:\s*(?:'([^']*)'|/([^,)]+))")
+              r"path\s*:\s*(?:'([^']*)'|(\/[^,)]+))")
           .firstMatch(repr);
       if (m != null) {
         verbPath = m.group(1) ?? m.group(2) ?? '';
