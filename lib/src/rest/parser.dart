@@ -193,7 +193,33 @@ class ClientParser {
     if (verbValueOpt == null) return null;
     final DartObject verbValue = verbValueOpt;
 
-    final String verbPath = _readStringOrEmpty(verbValue, 'path');
+    // The `path` field is defined on the `HttpVerb`
+    // base class and stored on the annotation
+    // instance. In some analyzer / SDK combos
+    // `DartObject.getField('path')` returns null for
+    // inherited fields when the annotation is a
+    // subclass instance (e.g. `HttpGet`). We
+    // therefore also try the first positional
+    // argument of the annotation's constructor
+    // (since `@HttpGet('/items/{id}')` passes the
+    // path as a positional arg to the super
+    // constructor).
+    String verbPath = _readStringOrEmpty(verbValue, 'path');
+    if (verbPath.isEmpty) {
+      final Element? annotationElement = verbMeta.element;
+      if (annotationElement != null) {
+        for (final Element child in annotationElement.children) {
+          final DartObject? argValue = verbValue.getField(child.name!);
+          if (argValue != null && !argValue.isNull) {
+            final String? s = argValue.toStringValue();
+            if (s != null && s.isNotEmpty) {
+              verbPath = s;
+              break;
+            }
+          }
+        }
+      }
+    }
     final Map<String, String> methodHeaders =
         _readStringMap(verbValue, 'headers');
 

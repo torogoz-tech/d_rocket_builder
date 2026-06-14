@@ -5,7 +5,7 @@
 /// `d_rocket_builder/lib/src/record_registry_builder.dart`) to detect
 /// which classes in the consumer's `lib/**.dart` files are
 /// `@Serializable` and therefore need a
-/// `register<ClassName>Serializer()` call emitted into the central
+/// `register[ClassName]Serializer()` call emitted into the central
 /// `initializeD()`.
 ///
 /// It is also used by the unit tests in `test/` to validate the
@@ -48,7 +48,7 @@ bool hasSerializableAnnotation(ClassElement cls) {
 /// codegen for generic classes requires explicit `register<X>Foo<T>()`
 /// calls from the user because type parameters are erased at
 /// runtime, so emitting an automatic registration would produce
-/// a `Serializer.register<Foo<T>>` that always fails at runtime.
+/// a `Serializer.register[Foo[T]]` that always fails at runtime.
 List<String> collectSerializableClassNames(LibraryElement library) {
   final Set<String> names = <String>{};
   for (final ClassElement cls in library.classes) {

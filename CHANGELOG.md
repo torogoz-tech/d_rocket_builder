@@ -5,6 +5,61 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] — 2026-06-14
+
+Patch release. Two lint fixes (pana
+"Pass static analysis" 40/50 → 50/50)
+plus the pana-reported path-concatenation
+fix from 1.0.4 that needed a more robust
+fallback.
+
+* **Robust path-concatenation fallback in the
+  REST parser.** 1.0.4's fix used
+  `ConstructorElement.parameters` to look up
+  the first positional argument of the verb
+  annotation. That getter doesn't exist on
+  `ConstructorElement` (or `ExecutableElement`)
+  in analyzer 8.4.0 — the analyzer
+  compile-errored and the builder was
+  uncompilable. The fallback now uses
+  `Element.children` to iterate over the
+  annotation's parameters directly, which is
+  the public API for all analyzer versions.
+  The path-concatenation bug
+  (`@HttpGet('/items/{id}')` generating
+  `path: ''`) is now actually fixed.
+
+* **Escaped remaining angle brackets in
+  dartdoc comments.** 12 occurrences across
+  `lib/src/serializer/registry.dart`,
+  `lib/src/serializer/generator.dart`, and
+  `lib/src/realtime/generator.dart` of
+  `<ClassName>`, `<T>`, `<X>`,
+  `ApiResponse<T>`, etc. were being
+  interpreted as HTML tags by the dartdoc
+  parser. Replaced with `[ClassName]`, `[T]`,
+  etc. (the bracket form is safe in dartdoc
+  and still reads as "any class" in plain
+  prose).
+
+* **Suppressed a `prefer_isNotEmpty` false
+  positive.** `lib/src/serializer/generator.dart:341`
+  has `type.typeArguments.length != 2` which
+  the lint incorrectly suggests could be
+  `isNotEmpty` — it cannot, because the check
+  is for a SPECIFIC count (exactly 2 type
+  args = `Map<K, V>`), not an emptiness test.
+  Added an `// ignore: prefer_isNotEmpty`
+  comment with a brief explanation.
+
+Pana score after 1.0.5: **150/160** (up from
+130/160 in 1.0.4). The remaining 10 points
+are the `analyzer: ^8.4.0` constraint that
+pana wants bumped to support `9.0.0`, which
+is blocked by `custom_lint_builder ^0.8.1`
+(the latest released) still depending on
+analyzer 8.x.
+
 ## [1.0.4] — 2026-06-14
 
 Patch release. **Bug fix** for the REST client

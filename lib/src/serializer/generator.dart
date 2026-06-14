@@ -338,6 +338,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
   bool _isMapStringDynamic(DartType type) {
     if (type is! InterfaceType) return false;
     if (!type.isDartCoreMap) return false;
+    // ignore: prefer_isNotEmpty
     if (type.typeArguments.length != 2) return false;
     final DartType k = type.typeArguments[0];
     final DartType v = type.typeArguments[1];
@@ -396,7 +397,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
     );
 
     // Generic-class codegen: when the class declares type parameters
-    // (e.g. `class ApiResponse<T>`) we need to:
+    // (e.g. `class ApiResponse[T]`) we need to:
     //   1. Add `<T>` to the fromJson/toJson signatures.
     //   2. Accept decoder/encoder function parameters for each type
     //      parameter (e.g. `T Function(Map<String, dynamic>) decodeT`).
@@ -453,13 +454,13 @@ $toJsonExtension
     required ClassElement element,
   }) {
     // Generic classes can't be auto-registered: type parameters are
-    // erased at runtime, so `Serializer.register<ApiResponse<T>>` is
+    // erased at runtime, so `Serializer.register<ApiResponse[T]>` is
     // meaningless. Users have to register each concrete instantiation
     // (e.g. `ApiResponse<User>`, `ApiResponse<Post>`) themselves.
     if (meta.isGeneric) {
       return '''
 /// Registers encoders/decoders for [${meta.className}]. You must
-/// provide a `decode<T>` and `encode<T>` for every type parameter
+/// provide a `decode[T]` and `encode[T]` for every type parameter
 /// that this class uses, and call this for every concrete
 /// instantiation:
 ///
@@ -534,7 +535,7 @@ void register${meta.className}Serializer() {
     final bool hasDateFormat = _hasDateFormat(formats);
 
     // Generic field: the field's declared type is one of the class's
-    // type parameters (e.g. `T` in `class ApiResponse<T> { T data; }`).
+    // type parameters (e.g. `T` in `class ApiResponse[T] { T data; }`).
     // We delegate the (de)serialisation to the decoder/encoder function
     // parameters that the renderer injected into the generated function
     // signature.
@@ -1200,7 +1201,7 @@ class _ClassMetadata {
   final String resolvedDiscriminator;
 
   /// Names of the type parameters declared on the class (e.g.
-  /// `['T']` for `class ApiResponse<T>`). Empty for non-generic
+  /// `['T']` for `class ApiResponse[T]`). Empty for non-generic
   /// classes.
   final List<String> typeParameters;
 

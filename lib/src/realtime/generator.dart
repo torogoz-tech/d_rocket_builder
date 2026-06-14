@@ -1,5 +1,5 @@
 //: codegen for `@WebSocketClient`
-// and `@SseClient`. Emits a `_$<ClassName>` that
+// and `@SseClient`. Emits a `_$[ClassName]` that
 // extends [IOWebSocketClient] or [HttpSseClient]
 // with the URL + headers pre-filled from the
 // annotation. The user can then override the
@@ -13,7 +13,7 @@ import 'package:d_rocket/d_rocket.dart';
 import 'package:source_gen/source_gen.dart';
 
 ///: generator for `@WebSocketClient`.
-/// Produces a `_$<ClassName>` that extends
+/// Produces a `_$[ClassName]` that extends
 /// [IOWebSocketClient] with the URL + headers
 /// baked in.
 class WebSocketClientGenerator
@@ -69,7 +69,7 @@ WebSocketClient register${className}WebSocketClient() =>
 }
 
 ///: generator for `@SseClient`.
-/// Produces a `_$<ClassName>` that extends
+/// Produces a `_$[ClassName]` that extends
 /// [HttpSseClient] with the URL + headers baked in.
 class SseClientGenerator extends GeneratorForAnnotation<SseClient> {
   const SseClientGenerator();
