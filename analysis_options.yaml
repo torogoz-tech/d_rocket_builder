@@ -1,0 +1,6 @@
+analyzer:
+  exclude:
+    - example/**
+  language:
+    strict-casts: true
+    strict-inference: true

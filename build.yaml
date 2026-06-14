@@ -1,0 +1,81 @@
+# build.yaml for d_rocket_builder
+#
+# Registers five builders that together wire up d_rocket:
+#
+#   d_rocket_builder:record            ->  *.g.dart                       (per-file, PartBuilder, default suffix)
+#   d_rocket_builder:serializer        ->  *.d_rocket_serializer.g.dart   (per-file, PartBuilder, Fase B suffix)
+#   d_rocket_builder:rest_client       ->  *.d_rocket_rest_client.g.dart  (per-file, PartBuilder, Fase C suffix)
+#   d_rocket_builder:rocket_table      ->  *.d_rocket_orm.g.dart          (per-file, PartBuilder, Fase 3 suffix)
+#   d_rocket_builder:record_registry   ->  d_rocket_registry.g.dart       (per-package, LibraryBuilder)
+#
+# The four per-file builders use **distinct** `PartBuilder`
+# suffixes so a single Dart file can freely mix `extends Record`
+# (default `.g.dart`) + `@Serializable` (`d_rocket_serializer`)
+# + `@RestClient` (`d_rocket_rest_client`) + `@RocketTable`
+# (`d_rocket_orm`) without any build_runner output-collision.
+# This is the fix for the long-standing bug documented in
+# `HANDOFF.md` §6 of the legacy monorepo.
+#
+# The `record_registry` builder is a `LibraryBuilder`: it scans
+# the consumer's `lib/**.dart`, collects every `extends Record`
+# class AND every `@Serializable` class AND every `@RestClient`
+# class AND every `@RocketTable` class, and emits a single
+# `d_rocket_registry.g.dart` with a public `initializeD()`
+# function that calls every `register<X>Record()`, every
+# `register<X>Serializer()`, every `register<X>RestClient()`,
+# and every `register<X>EntityMeta()`.
+
+builders:
+  d_rocket_builder:realtime:
+    import: "package:d_rocket_builder/d_rocket_builder.dart"
+    builder_factories: ["buildRealtime"]
+    build_extensions: {".dart": [".d_rocket_realtime.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    required_inputs: []
+
+  d_rocket_builder:record:
+    import: "package:d_rocket_builder/d_rocket_builder.dart"
+    builder_factories: ["buildRecord"]
+    build_extensions: {".dart": [".g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    required_inputs: []
+
+  d_rocket_builder:serializer:
+    import: "package:d_rocket_builder/d_rocket_builder.dart"
+    builder_factories: ["buildSerializer"]
+    build_extensions: {".dart": [".d_rocket_serializer.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    required_inputs: []
+
+  d_rocket_builder:rest_client:
+    import: "package:d_rocket_builder/d_rocket_builder.dart"
+    builder_factories: ["buildRestClient"]
+    build_extensions: {".dart": [".d_rocket_rest_client.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    required_inputs: []
+
+  d_rocket_builder:rocket_table:
+    import: "package:d_rocket_builder/d_rocket_builder.dart"
+    builder_factories: ["buildRocketTable"]
+    build_extensions: {".dart": [".d_rocket_orm.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    required_inputs: []
+
+  d_rocket_builder:record_registry:
+    import: "package:d_rocket_builder/d_rocket_builder.dart"
+    builder_factories: ["buildRecordRegistry"]
+    build_extensions: {r"$lib$": ["d_rocket_registry.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    required_inputs: []
+    applies_builders:
+      - "d_rocket_builder:record"
+      - "d_rocket_builder:serializer"
+      - "d_rocket_builder:rest_client"
+      - "d_rocket_builder:rocket_table"
+      - "d_rocket_builder:realtime"
