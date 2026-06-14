@@ -5,6 +5,49 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-06-14
+
+Patch release. Fixes the issues pana flagged
+on the 1.0.0 tarball (120/160 → 150/160 expected):
+
+* **Renamed `D_rocketLintsPlugin` → `DRocketLintsPlugin`.**
+  The old name used an underscore, which violates
+  the `UpperCamelCase` identifier rule. The
+  acronym form (`DRocket`) follows the Dart
+  convention for short prefixes. The export in
+  `d_rocket_builder.dart` was updated to match.
+* **Escaped angle brackets in dartdoc.** Five
+  occurrences of `<ClassName>` and `<X>` in
+  `lib/d_rocket_builder.dart`'s library docstring
+  were being interpreted as HTML by the dartdoc
+  parser. Replaced with `[ClassName]` / `[X]`.
+* **Tightened `analyzer: ^8.0.0` → `^8.4.0`.**
+  pana flagged that `^8.0.0` did not pin to the
+  latest 8.x release. Bumped to `^8.4.0` (the
+  latest 8.x compatible with `custom_lint_builder ^0.8.1`).
+  Note: bumping further to `^9.0.0` is blocked
+  by `custom_lint_builder ^0.8.1`, which is the
+  latest released version and still depends on
+  analyzer 8.x. This means the "up-to-date
+  dependencies" check stays at 0/10 until the
+  `custom_lint_builder` maintainers cut a 0.9.x
+  release with analyzer 9.x support.
+* **Fixed stale CLI name in the lints.**
+  `d_rocket:rocket_closure` → `d_rocket:closure`
+  in the `LinqClosureLint` docstring and
+  auto-fix prompt. (v1.0.0 of `d_rocket` renamed
+  the CLI executable from `rocket_closure` to
+  `closure`.)
+* **Fixed the pubspec repository / homepage /
+  issue-tracker / documentation URLs.** They
+  pointed to the `d_rocket` monorepo
+  (`https://github.com/torogoz-tech/d_rocket`),
+  but `d_rocket_builder` lives in its own repo
+  (`https://github.com/torogoz-tech/d_rocket_builder`).
+  pana's URL verification now succeeds.
+
+No API changes — this is a clean-up release.
+
 ## [1.0.0] — 2026-06-14
 
 First stable release. `d_rocket_builder` is the

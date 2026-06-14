@@ -5,32 +5,32 @@
 ///
 /// 1. `d_rocket_builder:record` (a `PartBuilder` with the
 ///    default `.g.dart` suffix) — walks `extends Record` classes
-///    and emits a `part` file with a `_<ClassName>Init` class plus
-///    a `register<ClassName>Record()` function per class.
+///    and emits a `part` file with a `_[ClassName]Init` class plus
+///    a `register[ClassName]Record()` function per class.
 /// 2. `d_rocket_builder:serializer` (a `PartBuilder` with the
 ///    `.d_rocket_serializer.g.dart` suffix) — walks `@Serializable`
 ///    classes and emits a `part` file with `XFromJson` / `XToJson` /
-///    `register<X>Serializer()` per class.
+///    `register[X]Serializer()` per class.
 /// 3. `d_rocket_builder:rest_client` (a `PartBuilder` with the
 ///    `.d_rocket_rest_client.g.dart` suffix) — walks `@RestClient`
-///    classes and emits a `part` file with a `_$<ClassName>`
-///    implementation plus a `register<ClassName>RestClient()`
+///    classes and emits a `part` file with a `_$[ClassName]`
+///    implementation plus a `register[ClassName]RestClient()`
 ///    factory per class.
 /// 4. `d_rocket_builder:rocket_table` (a `PartBuilder` with the
 ///    `.d_rocket_orm.g.dart` suffix) — walks `@Table`
 ///    classes and emits a `part` file with a
-///    `_$Table<ClassName>.entityMeta` literal plus a
-///    `register<ClassName>EntityMeta()` helper per class.
+///    `_$Table[ClassName].entityMeta` literal plus a
+///    `register[ClassName]EntityMeta()` helper per class.
 /// 5. `d_rocket_builder:record_registry` (a `LibraryBuilder`) —
 ///    scans the consumer's `lib/**.dart`, collects all `extends
 ///    Record` **and** all `@Serializable` **and** all
 ///    `@RestClient` **and** all `@Table` classes, and
 ///    emits a single `lib/d_rocket_registry.g.dart` with a public
 ///    `initializeD()` function that calls every
-///    `register<ClassName>Record()`, every
-///    `register<ClassName>Serializer()`, every
-///    `register<ClassName>RestClient()`, and every
-///    `register<ClassName>EntityMeta()`.
+///    `register[ClassName]Record()`, every
+///    `register[ClassName]Serializer()`, every
+///    `register[ClassName]RestClient()`, and every
+///    `register[ClassName]EntityMeta()`.
 ///
 /// The user calls `initializeD()` once in `main()` and every
 /// d_rocket-managed class is wired up.
@@ -71,7 +71,7 @@
 library d_rocket_builder;
 
 export 'src/lints/linq_closure_lint.dart'
-    show D_rocketLintsPlugin, LinqClosureLint, LinqClosureFix;
+    show DRocketLintsPlugin, LinqClosureLint, LinqClosureFix;
 export 'src/lints/n_plus_one_lint.dart' show NPlusOneLint;
 
 import 'package:build/build.dart';
@@ -88,8 +88,8 @@ import 'src/serializer/generator.dart';
 /// Builder factory for `d_rocket_builder:record`.
 ///
 /// Returns a [PartBuilder] (default `.g.dart` suffix) that walks
-/// `extends Record` classes and emits a `_<ClassName>Init` class
-/// plus a `register<ClassName>Record()` function per class.
+/// `extends Record` classes and emits a `_[ClassName]Init` class
+/// plus a `register[ClassName]Record()` function per class.
 Builder buildRecord(BuilderOptions options) {
   return PartBuilder(<Generator>[RecordGenerator()], '.g.dart');
 }
@@ -109,8 +109,8 @@ Builder buildSerializer(BuilderOptions options) {
 ///
 /// Returns a [PartBuilder] with the **non-default**
 /// `.d_rocket_rest_client.g.dart` suffix ('s HANDOFF §6 fix).
-/// Walks `@RestClient` classes and emits a `_$<ClassName>`
-/// implementation plus a `register<ClassName>RestClient()` factory
+/// Walks `@RestClient` classes and emits a `_$[ClassName]`
+/// implementation plus a `register[ClassName]RestClient()` factory
 /// per class.
 Builder buildRestClient(BuilderOptions options) {
   return PartBuilder(
@@ -125,7 +125,7 @@ Builder buildRestClient(BuilderOptions options) {
 /// `.d_rocket_orm.g.dart` suffix ('s HANDOFF §6 fix).
 /// Walks `@Table` classes and emits a per-class
 /// `static EntityMeta entityMeta` plus a
-/// `register<ClassName>EntityMeta()` helper per class.
+/// `register[ClassName]EntityMeta()` helper per class.
 Builder buildRocketTable(BuilderOptions options) {
   return PartBuilder(
     <Generator>[const TableGenerator()],
@@ -176,7 +176,7 @@ Builder buildRocketMigration(BuilderOptions options) {
 /// Returns a [PartBuilder] with the **non-default**
 /// `.d_rocket_realtime.g.dart` suffix. Walks
 /// `@WebSocketClient` and `@SseClient` abstract
-/// classes and emits a `_$<ClassName>` that extends
+/// classes and emits a `_$[ClassName]` that extends
 /// [IOWebSocketClient] / [HttpSseClient] with the
 /// URL + headers baked in.
 Builder buildRealtime(BuilderOptions options) {

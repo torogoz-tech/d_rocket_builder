@@ -7,7 +7,7 @@
 /// user should run the auto-rewriter CLI:
 ///
 /// ```bash
-/// dart run d_rocket:rocket_closure transform-file <path>
+/// dart run d_rocket:closure transform-file <path>
 /// ```
 library d_rocket_builder.lints.linq_closure_lint;
 
@@ -33,7 +33,7 @@ class LinqClosureLint extends LintRule {
     problemMessage: 'Closure LINQ calls run in-memory only; for SQL '
         'translation, rewrite with Expr.lambda(...).',
     correctionMessage:
-        "Run 'dart run d_rocket:rocket_closure transform-file <path>' "
+        "Run 'dart run d_rocket:closure transform-file <path>' "
         'to auto-rewrite this file.',
   );
 
@@ -78,7 +78,7 @@ class LinqClosureLint extends LintRule {
 
 /// .h: the plugin that exposes the lint
 /// rules to `package:custom_lint` consumers.
-class D_rocketLintsPlugin extends PluginBase {
+class DRocketLintsPlugin extends PluginBase {
   @override
   List<LintRule> getLintRules(CustomLintConfigs configs) =>
       <LintRule>[LinqClosureLint(), NPlusOneLint()];
@@ -162,7 +162,7 @@ class LinqClosureFix extends DartFix {
     // with the suggested form. The real
     // translation is done by the CLI (.g).
     final String hint = '  // d_rocket: try \n'
-        '  //   dart run d_rocket:rocket_closure transform-file <this-file>';
+        '  //   dart run d_rocket:closure transform-file <this-file>';
 
     final changeBuilder = reporter.createChangeBuilder(
       message: 'Mark closure LINQ call site for manual rewrite',

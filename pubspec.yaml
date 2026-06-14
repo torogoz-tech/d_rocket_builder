@@ -3,12 +3,12 @@ description: >
   `build_runner` codegen for the `d_rocket` framework:
   generates `@Serializable`, `@RestClient`, `@Table`
   handlers and the central `initializeD()` registry.
-version: 1.0.0
+version: 1.0.1
 
-repository: https://github.com/torogoz-tech/d_rocket
-homepage: https://github.com/torogoz-tech/d_rocket
-issue_tracker: https://github.com/torogoz-tech/d_rocket/issues
-documentation: https://github.com/torogoz-tech/d_rocket/blob/main/packages/d_rocket_builder/README.md
+repository: https://github.com/torogoz-tech/d_rocket_builder
+homepage: https://github.com/torogoz-tech/d_rocket_builder
+issue_tracker: https://github.com/torogoz-tech/d_rocket_builder/issues
+documentation: https://github.com/torogoz-tech/d_rocket_builder/blob/main/README.md
 
 topics:
   - codegen
@@ -29,7 +29,7 @@ platforms:
 
 dependencies:
   d_rocket: ^1.0.0
-  analyzer: ^8.0.0
+  analyzer: ^8.4.0
   build: ^4.0.0
   source_gen: ^4.0.0
   path: ^1.9.0
