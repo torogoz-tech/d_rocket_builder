@@ -5,6 +5,75 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] — 2026-06-14
+
+Patch release. **Bug fix** for the REST client
+codegen emitting broken Dart for `@RestClient`
+methods. Captured in a real consumer project
+(`FinanzasPersonales`) where the codegen was
+producing Dart that would not compile.
+
+Five distinct issues fixed in
+`lib/src/rest/emitter.dart` and one in
+`lib/src/rest/parser.dart`:
+
+* **`required` was being applied to positional
+  parameters.** In Dart, `required` is only
+  valid for named parameters. The emitter was
+  blindly prefixing every `isRequired`
+  parameter with `required `, producing
+  `required int id` for a `@Path('id') int id`
+  parameter (which is positional). The
+  `ParsedParameter` class now carries an
+  `isNamed` flag (sourced from
+  `FormalParameterElement.isNamed` in the
+  parser) and the emitter only emits the
+  `required` keyword when `isRequired && isNamed`.
+  Positional required parameters get no
+  keyword (they are required by default).
+
+* **`\$` was being emitted before `${p.name}`
+  in path-param and query-param value
+  positions** (4 occurrences: 2 in path
+  params, 2 in query params, 2 in body
+  expression). The `\$` was a leftover from
+  an earlier iteration where the values were
+  inside string literals. The generated
+  output was literally `$id`, `$source`,
+  `$body`, `$customer` — which Dart parses
+  as a reference to a variable named `$id`
+  (invalid — `$` is not a valid identifier
+  character). The `\$` escapes were removed;
+  the generated output is now plain `id`,
+  `source`, `body`, `customer`, which Dart
+  resolves as references to the method's
+  actual parameters.
+
+* **Map literals were closed with `});`**
+  instead of `};` (2 occurrences: the
+  `_pathParams` map and the `_query` map).
+  The `addAll` call right above them is
+  closed correctly with `});` because it
+  IS a function call, but the bare
+  `final Map<String, Object> _pathParams = <String, Object>{`
+  does not have an opening `(` so the
+  matching closer is just `};`. Fixed.
+
+* **`isNamed` plumbed through the parser**
+  (`lib/src/rest/parser.dart`): the
+  `ParsedParameter` class gained a `final
+  bool isNamed` field, the parser sets it
+  from `FormalParameterElement.isNamed`,
+  and the constructor signature was
+  updated. This is a non-breaking
+  internal-only change.
+
+No behavior changes for already-working
+inputs. The fix restores compilation for
+the regression case captured in
+`test/rocket_builder_regression_test.dart`
+in the consumer project.
+
 ## [1.0.3] — 2026-06-14
 
 Patch release. **Bug fix** for the ORM codegen

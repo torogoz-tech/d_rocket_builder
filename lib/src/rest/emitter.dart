@@ -74,9 +74,9 @@ void _emitMethod(StringBuffer buffer, ParsedClient client, ParsedMethod method) 
     buffer.writeln('    final Map<String, Object> _pathParams = <String, Object>{');
     for (final ParsedParameter p in pathParams) {
       final String key = p.annotationName ?? p.name;
-      buffer.writeln("      '$key': \$${p.name} as Object,");
+      buffer.writeln("      '$key': ${p.name} as Object,");
     }
-    buffer.writeln('    });');
+    buffer.writeln('    };');
     pathParamsValue = '_pathParams';
   }
 
@@ -89,9 +89,9 @@ void _emitMethod(StringBuffer buffer, ParsedClient client, ParsedMethod method) 
     buffer.writeln('    final Map<String, String> _query = <String, String>{');
     for (final ParsedParameter p in queryParams) {
       final String key = p.annotationName ?? p.name;
-      buffer.writeln("      '$key': \$${p.name}.toString(),");
+      buffer.writeln("      '$key': ${p.name}.toString(),");
     }
-    buffer.writeln('    });');
+    buffer.writeln('    };');
     queryParamsValue = '_query';
   }
 
@@ -104,9 +104,9 @@ void _emitMethod(StringBuffer buffer, ParsedClient client, ParsedMethod method) 
   if (bodyParams.isNotEmpty) {
     final ParsedParameter p = bodyParams.first;
     if (p.kind == ParamKind.rawBody) {
-      bodyExpr = '\$${p.name}';
+      bodyExpr = '${p.name}';
     } else {
-      bodyExpr = "dRest.encodeBody<${p.dartType}>(\$${p.name})";
+      bodyExpr = 'dRest.encodeBody<${p.dartType}>(${p.name})';
     }
   }
 
@@ -169,7 +169,7 @@ String _methodReturnTypeString(ParsedMethod method) {
 String _parameterList(ParsedMethod method) {
   final List<String> parts = <String>[];
   for (final ParsedParameter p in method.parameters) {
-    final String required = p.isRequired ? 'required ' : '';
+    final String required = (p.isRequired && p.isNamed) ? 'required ' : '';
     parts.add('$required${p.dartType} ${p.name}');
   }
   return parts.join(', ');

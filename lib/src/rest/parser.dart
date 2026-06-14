@@ -58,6 +58,7 @@ class ParsedParameter {
   final String dartType;
   final bool isRequired;
   final bool isNullable;
+  final bool isNamed;
 
   ParsedParameter({
     required this.name,
@@ -66,6 +67,7 @@ class ParsedParameter {
     required this.dartType,
     required this.isRequired,
     required this.isNullable,
+    required this.isNamed,
   });
 }
 
@@ -261,6 +263,7 @@ class ClientParser {
       dartType: p.type.getDisplayString(),
       isRequired: p.isRequired,
       isNullable: p.type.nullabilitySuffix == NullabilitySuffix.question,
+      isNamed: p.isNamed,
     );
   }
 
