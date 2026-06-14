@@ -5,6 +5,55 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] — 2026-06-14
+
+Patch release. **Bug fix** for the REST path
+fallback introduced in 1.0.7 — the regex
+expected the wrong format for the annotation's
+`toString()`.
+
+* **REST path fallback: 1.0.7's regex matched
+  nothing.** The fallback in 1.0.7 expected
+  `ClassName('/items/{id}')` — with quotes
+  around the path. But the analyzer's
+  `DartObject.toString()` for a const
+  annotation is `ClassName(path: /items/{id},
+  headers: {})` — the value is **unquoted** and
+  followed by a comma or closing paren. So the
+  regex never matched, `verbPath` stayed empty,
+  and the emitter produced `path: '/api'`
+  (just the class-level `@Route('/api')`
+  prefix, with the method-level `/items/{id}`
+  dropped).
+
+  The new fallback has two stages:
+    1. Try common positional field names
+       (`path`, `positional_0`, `_path`) via
+       `getField()` — covers cases where the
+       analyzer DOES expose the field but with
+       a different name.
+    2. Parse the `path: <value>` token out of
+       the annotation's `toString()` form. The
+       regex is now
+       `path\s*:\s*(?:'([^']*)'|/([^,)]+))`
+       which matches BOTH the quoted form
+       (`HttpVerb(path: '/foo')`) and the
+       unquoted form
+       (`HttpGet(path: /items/{id}, headers: {})`).
+       The unquoted form ends at `,` or `)`.
+
+  This was the path-concatenation bug the user
+  had been seeing since 1.0.5. With this
+  release, `@Route('/api') + @HttpGet('/items/{id}')`
+  finally produces
+  `path: '/api/items/{id}'` in the generated
+  `RestRequest`.
+
+* **Pubspec description cleanup from commit
+  `92094a5`** (the backticks removal that was
+  deferred for the next release) is included
+  in this version.
+
 ## [1.0.7] — 2026-06-14
 
 Patch release. **Three bug fixes** in the REST

@@ -197,21 +197,42 @@ class ClientParser {
     // base class. `DartObject.getField('path')`
     // sometimes returns null on inherited fields
     // when the annotation is a subclass instance
-    // (e.g. `HttpGet`). As a last-resort fallback
-    // (after also trying the constructor's
-    // children, which can be initializers rather
-    // than parameters in analyzer 8.4.0), parse
-    // the first positional argument out of the
-    // annotation's textual representation. The
-    // toString of a const annotation instance is
-    // well-defined: `ClassName(arg1, arg2)`.
+    // (e.g. `HttpGet`). As fallbacks:
+    //   1. Try the well-known positional field
+    //      names analyzer uses for inherited
+    //      positional args.
+    //   2. Parse the `path: '...'` token out of
+    //      the annotation's `toString()` form,
+    //      which is `ClassName(path: /value, headers: {...})`
+    //      for a const annotation. (1.0.7's regex
+    //      expected `ClassName('/value')` with
+    //      quotes, which is the wrong shape for
+    //      analyzer's toString.)
     String verbPath = _readStringOrEmpty(verbValue, 'path');
     if (verbPath.isEmpty) {
+      // Try common positional field names.
+      for (final String name in <String>['path', 'positional_0', '_path']) {
+        final DartObject? v = verbValue.getField(name);
+        if (v != null && !v.isNull) {
+          final String? s = v.toStringValue();
+          if (s != null && s.isNotEmpty) {
+            verbPath = s;
+            break;
+          }
+        }
+      }
+    }
+    if (verbPath.isEmpty) {
+      // Parse `path: <value>` out of the
+      // annotation's toString. The format is
+      //   HttpGet(path: /items/{id}, headers: {})
+      // — value is unquoted, ends at `,` or `)`.
       final String repr = verbValue.toString();
-      final RegExpMatch? m = RegExp(r"^\s*[A-Za-z_][A-Za-z_0-9]*\s*\(\s*'([^']*)'")
+      final RegExpMatch? m = RegExp(
+              r"path\s*:\s*(?:'([^']*)'|/([^,)]+))")
           .firstMatch(repr);
       if (m != null) {
-        verbPath = m.group(1) ?? '';
+        verbPath = m.group(1) ?? m.group(2) ?? '';
       }
     }
     final Map<String, String> methodHeaders =
