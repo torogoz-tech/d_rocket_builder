@@ -5,6 +5,65 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] — 2026-06-14
+
+Patch release. **Bug fix** for the ORM codegen
+emitting a lonely comma in the generated
+`*.d_rocket_orm.g.dart` when a `@Table` has no
+TPH/TPC inheritance.
+
+* **Removed the stray `,` after the
+  `_emitTphFields(...)` interpolation** in the
+  `EntityMeta` literal template
+  (`lib/src/orm/generator.dart:250`).
+
+  Before this fix the generated code looked like:
+  ```dart
+  EntityMeta(
+    ...
+    setId: ...,
+    [here _emitTphFields returns '' for non-TPH]
+    ,                            // <-- lonely comma, syntax error
+    navigations: <NavigationMeta>[
+      ...
+    ],
+  );
+  ```
+
+  For TPH/TPC tables, the bug was even worse:
+  `_emitTphFields` already ends its last `writeln`
+  with a trailing `,`, so the template's extra `,`
+  produced a second comma on the line after the
+  TPH block — also a syntax error.
+
+  After the fix the template just interpolates
+  the TPH block as-is (no extra comma from the
+  template). When there's no TPH, the line is
+  empty. When there is TPH, the last `writeln`'s
+  trailing `,` is the one that closes the
+  `setId:` pair.
+
+  The fix is one line: the `,` at the end of
+  the `${_emitTphFields(...)}` line in the
+  template was removed. The internal logic of
+  `_emitTphFields` was already correct (it
+  includes its own trailing commas) — only the
+  template's redundant comma was wrong.
+
+This was the bug that made `dart run
+build_runner build` produce a broken
+`*.d_rocket_orm.g.dart` for **every** non-TPH
+`@Table` (which is the vast majority of tables
+in any real app). The pana score for 1.0.0/1.0.1
+was unaffected because pana does not run the
+codegen — it just analyses the builder source.
+The bug only surfaces at consumer-build time.
+
+Reported by `@torogoz-tech` on 2026-06-14 after
+1.0.2 propagated to pub.dev and the codegen
+re-ran in a real consumer project. Verified
+fixed by the same workflow.
+
 ## [1.0.2] — 2026-06-14
 
 Patch release. No API or behavior changes — this

@@ -247,7 +247,7 @@ extension _$Table$className on $className {
     readColumn: $readColumnExpr,
     fromRow: $fromRowExpr,
     setId: $setIdExpr,
-    ${_emitTphFields(className, isTphRoot, isTphChild, discriminator, discSpec, columnSpecs, isTpcRoot)},
+    ${_emitTphFields(className, isTphRoot, isTphChild, discriminator, discSpec, columnSpecs, isTpcRoot)}
     navigations: <NavigationMeta>[
     $navigationsLiteral
     ],
