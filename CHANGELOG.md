@@ -5,6 +5,30 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] — 2026-06-14
+
+Patch release. No API or behavior changes — this
+is a docstring clean-up after the v1.0.1 fixes.
+
+* **Corrected the builder count in the library
+  docstring** of `lib/d_rocket_builder.dart`.
+  The docstring said "**five** build_runner
+  builders" but the package actually ships
+  **seven** (the two extra — `realtime` and
+  `custom_lint` — were added later and not
+  added to the numbered list in the docstring).
+  Fixed the count to "**seven**" and added the
+  two missing entries to the numbered list.
+* **Filled in the missing version numbers** in
+  the historical paragraph. Three sentences
+  ended with "were added in ." (period directly
+  after the preposition, with no version
+  number). Restored the missing version
+  references.
+
+No code or behavior changes — the runtime
+output of the builders is identical.
+
 ## [1.0.1] — 2026-06-14
 
 Patch release. Fixes the issues pana flagged
