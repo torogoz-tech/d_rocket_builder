@@ -567,9 +567,15 @@ ${entries.toString().trimRight()}
     // Foreign-key metadata. Either:
     //   * `@ForeignKey(table: 'X', column: 'Y')` — explicit
     //     target, overrides everything.
-    //   * `@Column(isForeignKey: true, ...)` — flag without
-    //     a target (left as a flag for downstream tools;
-    //     the DDL does not emit a REFERENCES clause).
+    //   * `@Column(isForeignKey: true, ...)` — flag form.
+    //     The target table is derived from the field
+    //     name (strip trailing `Id` / `_id`, same
+    //     heuristic the navigation discovery uses);
+    //     the target column defaults to `'id'`. The
+    //     flag form is less precise than the explicit
+    //     form (it cannot point to a non-`id` column
+    //     or to a plural table name), so the explicit
+    //     form is preferred for new code.
     String? foreignTable;
     String? foreignColumn;
     bool isForeignKey = false;
@@ -580,6 +586,8 @@ ${entries.toString().trimRight()}
     } else if (spec.columnAnnotation != null &&
         _readBool(spec.columnAnnotation!, 'isForeignKey')) {
       isForeignKey = true;
+      foreignTable = _deriveNavName(spec.field.displayName);
+      foreignColumn = 'id';
     }
 
     // Index metadata. `@Index(unique: bool, name: String?)`
