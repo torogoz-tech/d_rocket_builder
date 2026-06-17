@@ -5,6 +5,79 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] — 2026-06-15
+
+**Coordinated with `d_rocket` 1.1.1.** Starting
+with this release, `d_rocket_builder` follows a
+**lockstep versioning** convention: every
+`d_rocket` release ships a paired
+`d_rocket_builder` release with the same version
+number. Before 1.1.1 the two packages
+versioned independently; that convention is
+now retired. Rationale: the builder is a
+codegen tool tightly coupled to the runtime
+(generates code that imports `d_rocket`), and
+the releases always ship together. Lockstep
+makes the compatibility matrix trivial: same
+version, same release.
+
+Patch release (relative to `d_rocket_builder`
+1.0.12). Two production-readiness fixes
+to the auto-generated migrations, paired with
+the d_rocket 1.1.1 release.
+
+* **CREATE INDEX is now emitted in
+  auto-generated migrations.** The
+  `MigrationGenerator` used to call
+  `_EntityMeta.createTableDdl()` per entity
+  but never `createIndexStatements()`, so the
+  generated migration ran the `CREATE TABLE`
+  statements and silently dropped the
+  `@Index` annotations. The runtime supported
+  `CREATE INDEX`; the codegen just forgot to
+  call it. Fix: emit a
+  `for (idx in _EntityMeta.createIndexStatements())
+  { exec(idx); }` loop per entity in the
+  `up()` template. Without this fix, queries
+  on indexed columns degraded to full table
+  scans as the database grew.
+
+* **`@Column(isForeignKey: true)` now emits
+  `REFERENCES` in the DDL.** The flag form
+  used to set `isForeignKey = true` on the
+  `ColumnMeta` but left `foreignTable` /
+  `foreignColumn` null, so the runtime's
+  `_columnDdl()` skipped the `REFERENCES`
+  clause (the comment in the codegen said it
+  was a "flag for downstream tools"). Fix:
+  derive the target table from the field name
+  using the same heuristic the navigation
+  discovery uses (strip trailing `Id` / `_id`,
+  lowercase the first letter); target column
+  defaults to `'id'`. The explicit
+  `@ForeignKey(table: ..., column: ...)` form
+  is still preferred for cases that need a
+  non-`id` target or a plural table name.
+
+* **Defense in depth: `PRAGMA foreign_keys
+  = ON` in the migration.** The d_rocket
+  1.1.1 runtime fix sets this on every
+  connection, but the explicit PRAGMA at the
+  end of the auto-generated `up()` makes the
+  intent visible to anyone reading the
+  generated SQL.
+
+* **Tests added.** 6 cases in
+  `test/orm/migration_ddl_includes_indexes_test.dart`:
+  the runtime contract for `createIndexStatements`
+  (empty when no `@Index`, one `CREATE INDEX`
+  per `@Index`), the runtime DDL for both
+  `@ForeignKey` forms (explicit and derived),
+  and a source-level regression net that the
+  migration template contains
+  `createIndexStatements` and
+  `PRAGMA foreign_keys = ON`.
+
 ## [1.0.12] — 2026-06-14
 
 Patch release. Documentation-only update.
