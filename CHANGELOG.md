@@ -5,6 +5,26 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] — 2026-06-15
+
+**Coordinated with `d_rocket` 1.2.1.** No
+code changes in this release. The 1.2.1
+runtime changes are: the B-09 fix
+(validation gap in `join_` / `groupJoin_`
+arity), the new `selectMany_` LINQ
+operator, and a doc-parity pass over the
+README and the shared `doc/`. None of
+these touch the codegen pipeline, so the
+builder had no code changes.
+
+The version bump keeps the lockstep
+convention established in 1.1.1. Future
+`d_rocket` releases will be paired with a
+`d_rocket_builder` release of the same
+version number, even if the builder had
+no code changes (per the convention in
+`.trae/rules/project_rules.md`).
+
 ## [1.2.0] — 2026-06-15
 
 **Coordinated with `d_rocket` 1.2.0.** No
