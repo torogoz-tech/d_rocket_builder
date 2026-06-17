@@ -5,6 +5,32 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-06-15
+
+**Coordinated with `d_rocket` 1.2.0.** No
+code changes in this release. The
+auto-migration system is a runtime feature of
+`d_rocket`; it computes the schema snapshot
+from the `EntityMeta` list that the codegen
+already emits, so the builder did not need
+to be touched. The version bump keeps the
+lockstep convention established in 1.1.1.
+
+The 1.2.0 runtime change is: `Db.open` and
+`Db.inMemory` gain an `entityMetas:`
+parameter and an `autoMigrate: bool` flag.
+When `autoMigrate: true` is set and
+`entityMetas:` is non-empty, the runtime
+computes the diff between the codegen-emitted
+schema and the last applied schema, applies
+the safe changes in a transaction, and
+reports the unsafe changes via
+`Db.pendingSchemaDiff()`. The diff covers
+CREATE TABLE / CREATE INDEX / ADD COLUMN
+(safe, auto-applied) and DROP TABLE / DROP
+COLUMN / DROP INDEX / MODIFY COLUMN (unsafe,
+reported only).
+
 ## [1.1.1] — 2026-06-15
 
 **Coordinated with `d_rocket` 1.1.1.** Starting
