@@ -33,12 +33,14 @@ central `d_rocket_registry.g.dart`.
   design.
 * **Lockstep version.** This release
   is at the same version as the
-  other 3 packages in the
+  other 4 packages in the
   ecosystem:
   `d_rocket: 2.0.0`,
+  `d_rocket_lints: 2.0.0`,
   `d_rocket_engine_sqlite: 2.0.0`,
-  `d_rocket_engine_postgres: 2.0.0`.
-  All 4 are published in lockstep
+  `d_rocket_engine_postgres: 2.0.0`,
+  `d_rocket_engine_web: 2.0.0`.
+  All 5 are published in lockstep
   on the same tag.
 
 ## [1.2.2] — 2026-06-15
