@@ -76,7 +76,12 @@ void main() {
         pkOf: (Object e) => 0,
       );
       final String ddl = booksMeta.createTableDdl();
-      expect(ddl, contains('CREATE TABLE books'));
+      // Auto-migrations emit `CREATE TABLE IF NOT
+      // EXISTS` so the migration is idempotent on
+      // re-run. Both forms create the table; the
+      // IF NOT EXISTS form is the canonical
+      // auto-migration shape.
+      expect(ddl, contains('CREATE TABLE IF NOT EXISTS books'));
       expect(ddl, contains('id INTEGER PRIMARY KEY AUTOINCREMENT'));
       expect(ddl, contains('title TEXT NOT NULL'));
     });

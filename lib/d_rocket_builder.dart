@@ -70,10 +70,6 @@
 ///                      non-default suffix, same rationale).
 library d_rocket_builder;
 
-export 'src/lints/linq_closure_lint.dart'
-    show DRocketLintsPlugin, LinqClosureLint, LinqClosureFix;
-export 'src/lints/n_plus_one_lint.dart' show NPlusOneLint;
-
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
@@ -84,6 +80,15 @@ import 'src/record_generator.dart';
 import 'src/record_registry_builder.dart';
 import 'src/rest/generator.dart';
 import 'src/serializer/generator.dart';
+
+// 2.0.0 — Lints moved to the dedicated
+// `d_rocket_lints` package. We re-export
+// them here so existing consumers of
+// `d_rocket_builder` don't have to
+// update their imports. New consumers
+// should depend on `d_rocket_lints`
+// directly (it's a `dev_dependency`).
+export 'package:d_rocket_lints/d_rocket_lints.dart';
 
 /// Builder factory for `d_rocket_builder:record`.
 ///
