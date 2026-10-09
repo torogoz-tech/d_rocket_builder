@@ -51,10 +51,10 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
         .where((FieldElement f) => !f.isStatic && !f.isPrivate)
         .toList();
 
-    final FieldElement? extraField = meta.unknownKeyPolicy ==
-            UnknownKeyPolicy.capture
-        ? _findExtraField(element, fields)
-        : null;
+    final FieldElement? extraField =
+        meta.unknownKeyPolicy == UnknownKeyPolicy.capture
+            ? _findExtraField(element, fields)
+            : null;
 
     final _GenerationPlan plan = _buildPlan(meta, fields, extraField);
 
@@ -102,8 +102,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
       typeField: typeField,
       unknownKeyPolicy: unknownKeyPolicy,
       naming: naming,
-      resolvedDiscriminator:
-          discriminator ?? rename ?? element.displayName,
+      resolvedDiscriminator: discriminator ?? rename ?? element.displayName,
       typeParameters: typeParameters,
     );
   }
@@ -133,7 +132,8 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
         "{ throw ArgumentError('Invalid discriminator for ${meta.className} "
         "at ${meta.typeField}: expected ${meta.resolvedDiscriminator}'); }",
       );
-      toJsonEntries.add("'${meta.typeField}': '${meta.resolvedDiscriminator}',");
+      toJsonEntries
+          .add("'${meta.typeField}': '${meta.resolvedDiscriminator}',");
     }
 
     // Per-field processing.
@@ -199,7 +199,8 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
     final String fieldName = field.displayName;
     final DartType type = field.type;
     final String typeStr = type.toString();
-    final String defaultJsonKey = jsonKeyFor(fieldName, _namingAsString(meta.naming));
+    final String defaultJsonKey =
+        jsonKeyFor(fieldName, _namingAsString(meta.naming));
     final List<_FormatSpec> formats = _getFormatAnnotations(field);
 
     final ConstantReader? jsonKeyAnnotation = _getJsonKeyAnnotation(field);
@@ -697,8 +698,7 @@ void register${meta.className}Serializer() {
             "json['$jsonKey'] == null ? null : Duration(microseconds: (json['$jsonKey'] as num).toInt())";
       } else {
         toExpr = '$fieldName.inMicroseconds';
-        fromExpr =
-            "Duration(microseconds: (json['$jsonKey'] as num).toInt())";
+        fromExpr = "Duration(microseconds: (json['$jsonKey'] as num).toInt())";
       }
     } else if (type.element?.kind == ElementKind.ENUM) {
       toExpr = _enumToJsonExpr(fieldName, typeStr, useEnumIndex);
@@ -711,10 +711,14 @@ void register${meta.className}Serializer() {
       );
     } else if (type.isDartCoreInt) {
       toExpr = fieldName;
-      fromExpr = "(json['$jsonKey'] as num).toInt()";
+      fromExpr = typeStr.endsWith('?')
+          ? "json['$jsonKey'] == null ? null : (json['$jsonKey'] as num).toInt()"
+          : "(json['$jsonKey'] as num).toInt()";
     } else if (type.isDartCoreDouble) {
       toExpr = fieldName;
-      fromExpr = "(json['$jsonKey'] as num).toDouble()";
+      fromExpr = typeStr.endsWith('?')
+          ? "json['$jsonKey'] == null ? null : (json['$jsonKey'] as num).toDouble()"
+          : "(json['$jsonKey'] as num).toDouble()";
     } else if (type.isDartCoreString || type.isDartCoreBool) {
       toExpr = fieldName;
       fromExpr = "json['$jsonKey'] as $typeStr";
@@ -1076,8 +1080,9 @@ void register${meta.className}Serializer() {
   // Annotation read helpers
   // ---------------------------------------------------------------------------
 
-  String _nonNullableType(String typeStr) =>
-      typeStr.endsWith('?') ? typeStr.substring(0, typeStr.length - 1) : typeStr;
+  String _nonNullableType(String typeStr) => typeStr.endsWith('?')
+      ? typeStr.substring(0, typeStr.length - 1)
+      : typeStr;
 
   String? _readOptionalString(ConstantReader reader, String field) {
     final ConstantReader? value = reader.peek(field);

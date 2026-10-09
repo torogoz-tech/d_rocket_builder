@@ -1,9 +1,11 @@
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/nullability_suffix.dart' show NullabilitySuffix;
-import 'package:analyzer/dart/element/type.dart' show DartType;
+import 'package:analyzer/dart/element/nullability_suffix.dart'
+    show NullabilitySuffix;
 import 'package:build/build.dart';
 import 'package:d_rocket/d_rocket.dart';
 import 'package:source_gen/source_gen.dart';
+
+import 'type_support.dart';
 
 /// Codegen for `@Table` entities. Emits a per-class
 /// static `EntityMeta entityMeta` plus a
@@ -107,34 +109,41 @@ class TableGenerator extends GeneratorForAnnotation<Table> {
     }
 
     // Build the column literals for the constructor.
-    final String columnsLiteral = columnSpecs.map(_emitColumnLiteral).join(',\n    ');
+    final String columnsLiteral =
+        columnSpecs.map(_emitColumnLiteral).join(',\n    ');
     final List<_ColumnSpec> insertableSpecs = columnSpecs
         .where((_ColumnSpec s) => !(s.isPrimaryKey && s.isAutoIncrement))
         .toList();
-    final List<_ColumnSpec> updatableSpecs = columnSpecs
-        .where((_ColumnSpec s) => !s.isPrimaryKey)
-        .toList();
-    final String insertableLiteral = insertableSpecs.map(_emitColumnLiteral).join(',\n    ');
-    final String updatableLiteral = updatableSpecs.map(_emitColumnLiteral).join(',\n    ');
+    final List<_ColumnSpec> updatableSpecs =
+        columnSpecs.where((_ColumnSpec s) => !s.isPrimaryKey).toList();
+    final String insertableLiteral =
+        insertableSpecs.map(_emitColumnLiteral).join(',\n    ');
+    final String updatableLiteral =
+        updatableSpecs.map(_emitColumnLiteral).join(',\n    ');
 
     // .a: build the `navigations` literal
     // from any `@ForeignKey` columns. Each FK becomes
     // a `NavigationMeta` entry in the EntityMeta's
     // `navigations: <NavigationMeta>[…]` list.
-    final String navigationsLiteral = _emitNavigationsLiteral(columnSpecs, className);
+    final String navigationsLiteral =
+        _emitNavigationsLiteral(columnSpecs, className);
     // .b: emit the navigation extension
     // (e.g. `Order.customer` getter) that reads from
     // the global NavigationRegistry.
-    final String navigationExtension = _emitNavigationExtension(className, columnSpecs);
+    final String navigationExtension =
+        _emitNavigationExtension(className, columnSpecs);
     // .f: emit the include extension
     // (e.g. `OrderDbSetIncludes` with
     // `.include_customer()`) that wraps the
     // string-based `.include_<T>()` in a typed method.
-    final String includeExtension = _emitIncludeExtension(className, columnSpecs);
+    final String includeExtension =
+        _emitIncludeExtension(className, columnSpecs);
 
-    final int pkIndex = columnSpecs.indexWhere((_ColumnSpec s) => s.isPrimaryKey);
+    final int pkIndex =
+        columnSpecs.indexWhere((_ColumnSpec s) => s.isPrimaryKey);
 
-    final String pkOfExpr = '(Object e) => (e as $className).${pkField.displayName}';
+    final String pkOfExpr =
+        '(Object e) => (e as $className).${pkField.displayName}';
 
     //  + 5.2.2 (TPH): the inheritance
     // role of this class.
@@ -149,8 +158,7 @@ class TableGenerator extends GeneratorForAnnotation<Table> {
     final bool isInheritanceTph = inheritanceName == 'tph';
     final bool isTpcRoot = inheritanceName == 'tpc';
     final bool isTphRoot = discriminator == 'root' || isInheritanceTph;
-    final bool isTphChild =
-        discriminator != null && discriminator != 'root';
+    final bool isTphChild = discriminator != null && discriminator != 'root';
 
     //  (TPH): find the discriminator
     // column (the one with `@Column(discriminator:
@@ -180,7 +188,7 @@ class TableGenerator extends GeneratorForAnnotation<Table> {
     // the runtime will skip it.
     final String readColumnExpr =
         '(Object e, ColumnMeta c) => switch (c.dartField) {\n'
-        '${columnSpecs.map((_ColumnSpec s) => "      '${s.field.displayName}' => (e as $className).${s.field.displayName},").join('\n')}\n'
+        '${columnSpecs.map((_ColumnSpec s) => "      '${s.field.displayName}' => ${_emitReadColumnValue(s, className)},").join('\n')}\n'
         '      _ => null,\n'
         '    }';
 
@@ -213,7 +221,7 @@ class TableGenerator extends GeneratorForAnnotation<Table> {
           '  }';
     } else {
       setIdExpr =
-          '(Object e, Object id) => (e as $className).${pkField.displayName} = id as ${_dartTypeName(pkField.type)}';
+          '(Object e, Object id) => (e as $className).${pkField.displayName} = id as ${dartTypeName(pkField.type)}';
     }
 
     //  (TPH): read the `children` map
@@ -289,8 +297,7 @@ void register${className}EntityMeta() {
     final List<String> getters = <String>[];
     for (final _ColumnSpec s in specs) {
       if (s.foreignKeyAnnotation == null) continue;
-      final String? targetTable =
-          _readString(s.foreignKeyAnnotation!, 'table');
+      final String? targetTable = _readString(s.foreignKeyAnnotation!, 'table');
       if (targetTable == null || targetTable.isEmpty) continue;
       final String navName = _deriveNavName(s.field.displayName);
       // .b: target type defaults to `dynamic`
@@ -325,8 +332,7 @@ void register${className}EntityMeta() {
     final List<String> methods = <String>[];
     for (final _ColumnSpec s in specs) {
       if (s.foreignKeyAnnotation == null) continue;
-      final String? targetTable =
-          _readString(s.foreignKeyAnnotation!, 'table');
+      final String? targetTable = _readString(s.foreignKeyAnnotation!, 'table');
       if (targetTable == null || targetTable.isEmpty) continue;
       final String navName = _deriveNavName(s.field.displayName);
       // .f: emit a typed method. The
@@ -393,8 +399,7 @@ void register${className}EntityMeta() {
     for (final _ColumnSpec s in specs) {
       if (s.foreignKeyAnnotation == null) continue;
       final String dartField = s.field.displayName;
-      final String? targetTable =
-          _readString(s.foreignKeyAnnotation!, 'table');
+      final String? targetTable = _readString(s.foreignKeyAnnotation!, 'table');
       if (targetTable == null || targetTable.isEmpty) continue;
       final String targetColumn =
           _readString(s.foreignKeyAnnotation!, 'column') ?? 'id';
@@ -495,25 +500,26 @@ ${entries.toString().trimRight()}
       ..writeln('(Map<String, Object?> r) {');
     for (final _ColumnSpec spec in specs) {
       final String sqlName = _toSnakeCase(spec.field.displayName);
-      final String type = _dartTypeName(spec.field.type);
-      final String defaultValue = _dartDefaultValueFor(spec.field.type);
+      final String type = dartTypeName(spec.field.type);
+      final String rawExpression = "r['$sqlName']";
       if (spec.isPrimaryKey) {
         // PKs are always present.
         body.writeln(
-          '    final ${type} _${spec.field.displayName} = r[\'$sqlName\'] as ${type};',
-        );
-      } else if (spec.isNullable) {
-        body.writeln(
-          '    final ${type} _${spec.field.displayName} = r[\'$sqlName\'] as ${type}?;',
+          '    final ${type} _${spec.field.displayName} = '
+          '${emitOrmRowValue(rawExpression: rawExpression, typeName: type, fieldName: spec.field.displayName, nullable: false)};',
         );
       } else {
         body.writeln(
-          '    final ${type} _${spec.field.displayName} = r[\'$sqlName\'] as ${type}? ?? $defaultValue;',
+          '    final ${type} _${spec.field.displayName} = '
+          '${emitOrmRowValue(rawExpression: rawExpression, typeName: type, fieldName: spec.field.displayName, nullable: spec.isNullable)};',
         );
       }
     }
     body.write('    return $className(');
-    body.write(specs.map((_ColumnSpec s) => '${s.field.displayName}: _${s.field.displayName}').join(', '));
+    body.write(specs
+        .map((_ColumnSpec s) =>
+            '${s.field.displayName}: _${s.field.displayName}')
+        .join(', '));
     body.writeln(');');
     body.writeln('  }');
     return body.toString();
@@ -522,22 +528,15 @@ ${entries.toString().trimRight()}
   /// Returns the Dart source-level name of a Dart type as
   /// used in constructor positional / named arguments (e.g.
   /// `int`, `String`, `double`, `bool`).
-  String _dartTypeName(DartType t) {
-    // `getDisplayString` returns `int`, `String`, `double`,
-    // `bool`, `DateTime`, `BigInt`, etc. — exactly what we
-    // want for the cast.
-    return t.getDisplayString();
-  }
-
-  /// Returns the literal default value (used when the row's
-  /// column is `NULL` for a non-nullable Dart type).
-  String _dartDefaultValueFor(DartType t) {
-    final String name = t.getDisplayString();
-    if (name == 'int') return '0';
-    if (name == 'double') return '0.0';
-    if (name == 'bool') return 'false';
-    if (name == 'String') return "''";
-    return 'null as $name';
+  String _emitReadColumnValue(_ColumnSpec spec, String className) {
+    final String type = dartTypeName(spec.field.type);
+    final String fieldExpression =
+        '(e as $className).${spec.field.displayName}';
+    return emitOrmSqlValue(
+      fieldExpression: fieldExpression,
+      typeName: type,
+      nullable: spec.isNullable,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -555,14 +554,13 @@ ${entries.toString().trimRight()}
   String _emitColumnLiteral(_ColumnSpec spec) {
     final FieldElement f = spec.field;
     final String dartField = f.displayName;
-    final String type = f.type.toString();
+    final String type = nonNullableTypeName(dartTypeName(f.type));
     final String sqlName = _toSnakeCase(dartField);
     final bool nullable = spec.isPrimaryKey
         ? false
-        : _readBool(spec.columnAnnotation!, 'nullable');
-    final String? defaultLiteral = spec.isPrimaryKey
-        ? null
-        : _readDefaultLiteral(spec.columnAnnotation!);
+        : spec.isNullable || _readBool(spec.columnAnnotation!, 'nullable');
+    final String? defaultLiteral =
+        spec.isPrimaryKey ? null : _readDefaultLiteral(spec.columnAnnotation!);
 
     // Foreign-key metadata. Either:
     //   * `@ForeignKey(table: 'X', column: 'Y')` — explicit
@@ -749,5 +747,4 @@ class _ColumnSpec {
       field.type.nullabilitySuffix ==
       // ignore: deprecated_member_use
       NullabilitySuffix.question;
-
 }

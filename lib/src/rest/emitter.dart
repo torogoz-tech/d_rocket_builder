@@ -25,11 +25,16 @@ String emitClient(ParsedClient client) {
   // may be declared in a file."
 
   // === Concrete class ===
-  buffer.writeln('class _\$${client.className} implements ${client.className} {');
-  buffer.writeln('  _\$${client.className}();');
+  buffer
+      .writeln('class _\$${client.className} implements ${client.className} {');
+  buffer.writeln('  _\$${client.className}({RestClientConfig? config})');
+  buffer.writeln('      : _client = config?.build(dRest.client);');
+  buffer.writeln('  final HttpClient? _client;');
   buffer.writeln();
   buffer.writeln('  /// Crea una instancia del cliente tipado.');
-  buffer.writeln('  static ${client.className} create() => _\$${client.className}();');
+  buffer.writeln(
+      '  static ${client.className} create({RestClientConfig? config}) =>');
+  buffer.writeln('      _\$${client.className}(config: config);');
   buffer.writeln();
 
   for (final ParsedMethod method in client.methods) {
@@ -37,6 +42,11 @@ String emitClient(ParsedClient client) {
   }
 
   buffer.writeln('}');
+
+  buffer.writeln();
+  buffer.writeln(
+      '${client.className} create${client.className}({RestClientConfig? config}) =>');
+  buffer.writeln('    _\$${client.className}.create(config: config);');
 
   // The central `d_rocket_registry.g.dart` emits
   // `register<ClassName>RestClient()` for every
@@ -54,7 +64,8 @@ String emitClient(ParsedClient client) {
   return buffer.toString();
 }
 
-void _emitMethod(StringBuffer buffer, ParsedClient client, ParsedMethod method) {
+void _emitMethod(
+    StringBuffer buffer, ParsedClient client, ParsedMethod method) {
   final String returnTypeStr = _methodReturnTypeString(method);
   final String fullPath = '${client.classPath}${method.path}';
 
@@ -92,7 +103,8 @@ void _emitMethod(StringBuffer buffer, ParsedClient client, ParsedMethod method) 
       .toList();
   String pathParamsValue = 'const <String, Object>{}';
   if (pathParams.isNotEmpty) {
-    buffer.writeln('    final Map<String, Object> _pathParams = <String, Object>{');
+    buffer.writeln(
+        '    final Map<String, Object> _pathParams = <String, Object>{');
     for (final ParsedParameter p in pathParams) {
       final String key = p.annotationName ?? p.name;
       buffer.writeln("      '$key': ${p.name} as Object,");
@@ -157,17 +169,20 @@ void _emitMethod(StringBuffer buffer, ParsedClient client, ParsedMethod method) 
     buffer.writeln('    await invokeRequest<void>(');
     buffer.writeln('      _request,');
     buffer.writeln('      (dynamic data) => null,');
+    buffer.writeln('      client: _client,');
     buffer.writeln('    );');
   } else if (method.returnType.isDynamic) {
     buffer.writeln('    return invokeRequest<dynamic>(');
     buffer.writeln('      _request,');
     buffer.writeln('      (dynamic data) => data,');
+    buffer.writeln('      client: _client,');
     buffer.writeln('    );');
   } else {
     final String t = method.returnType.dartType;
     buffer.writeln('    return invokeRequest<$t>(');
     buffer.writeln('      _request,');
     buffer.writeln('      (dynamic data) => dRest.decodeBody<$t>(data),');
+    buffer.writeln('      client: _client,');
     buffer.writeln('    );');
   }
 
