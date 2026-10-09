@@ -17,9 +17,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: torogoz-tech/d_rocket
+          ref: main
+          path: .ci/deps/d_rocket
+      - uses: actions/checkout@v4
+        with:
+          repository: torogoz-tech/d_rocket_lints
+          ref: main
+          path: .ci/deps/d_rocket_lints
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: 3.11.5
+      - name: Configure local package overrides
+        run: |
+          printf '%s\n' \
+            'dependency_overrides:' \
+            '  d_rocket:' \
+            '    path: .ci/deps/d_rocket' \
+            '  d_rocket_lints:' \
+            '    path: .ci/deps/d_rocket_lints' > pubspec_overrides.yaml
       - run: dart pub get
       - run: dart analyze
       - run: dart test --reporter=expanded
@@ -30,11 +48,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: torogoz-tech/d_rocket
+          ref: main
+          path: .ci/deps/d_rocket
+      - uses: actions/checkout@v4
+        with:
+          repository: torogoz-tech/d_rocket_lints
+          ref: main
+          path: .ci/deps/d_rocket_lints
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: 3.11.5
       - name: Verify tag and package version
         run: |
           test "$(sed -n 's/^version: *//p' pubspec.yaml | head -1)" = "${GITHUB_REF#refs/tags/v}"
+      - name: Configure local package overrides
+        run: |
+          printf '%s\n' \
+            'dependency_overrides:' \
+            '  d_rocket:' \
+            '    path: .ci/deps/d_rocket' \
+            '  d_rocket_lints:' \
+            '    path: .ci/deps/d_rocket_lints' > pubspec_overrides.yaml
       - run: dart pub get
       - run: dart pub publish --dry-run
