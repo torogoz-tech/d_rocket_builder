@@ -78,5 +78,13 @@ void main() {
         'entity.timestamp == null ? null : (entity.timestamp as DateTime).toIso8601String()',
       );
     });
+
+    test('exact decimal value objects are rejected without a contract', () {
+      expect(
+          decimalConverterError('Invoice.amount', 'Decimal'),
+          contains(
+            'explicit converter',
+          ));
+    });
   });
 }

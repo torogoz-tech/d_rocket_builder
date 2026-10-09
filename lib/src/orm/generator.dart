@@ -108,6 +108,18 @@ class TableGenerator extends GeneratorForAnnotation<Table> {
       );
     }
 
+    for (final _ColumnSpec spec in columnSpecs) {
+      if (isDecimalValueObject(spec.field.type)) {
+        throw InvalidGenerationSourceError(
+          decimalConverterError(
+            '${className}.${spec.field.displayName}',
+            spec.field.type.toString(),
+          ),
+          element: spec.field,
+        );
+      }
+    }
+
     // Build the column literals for the constructor.
     final String columnsLiteral =
         columnSpecs.map(_emitColumnLiteral).join(',\n    ');

@@ -49,6 +49,18 @@ The regression tests cover:
 - DateTime persistence through the real SQLite provider;
 - generated metadata using non-nullable runtime `Type` literals.
 
-The project has no Decimal value-object/converter contract in `d_rocket 2.0.0`.
-The supported decimal-equivalent representation is therefore `double` or
-`num`; arbitrary Decimal objects still require an explicit conversion layer.
+## Decimal policy in 2.1.0
+
+The supported decimal-equivalent representations are `double` and `num`.
+They map to SQLite `REAL` and `NUMERIC`, respectively, and are appropriate
+when the application accepts floating-point or SQLite numeric affinity
+semantics.
+
+Exact decimal value objects such as `Decimal` or `BigDecimal` do not have an
+implicit storage contract. The builder now fails generation with a clear
+message unless the value is converted explicitly. For JSON, use
+`@JsonKey(converter: 'money')` and provide `moneyToJson` / `moneyFromJson`.
+For SQLite persistence, store an exact value as `String` or a scaled `int`
+and expose the decimal object through an application-level converter. This
+prevents silent precision loss and keeps the wire, ORM, and database formats
+intentional.

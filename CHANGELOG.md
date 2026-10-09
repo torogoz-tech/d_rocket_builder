@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Guarded nullable numeric JSON values before conversion.
 * Added regression coverage for JSON, SQLite, null values, DateTime and
   decimal-equivalent numeric fields.
+* Exact `Decimal` and `BigDecimal` value objects now fail generation with a
+  clear converter/storage-contract error instead of using an implicit,
+  potentially lossy representation.
 
 ## [2.0.0] — 2026-06-22
 

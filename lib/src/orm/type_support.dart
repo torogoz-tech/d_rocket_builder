@@ -1,5 +1,22 @@
 import 'package:analyzer/dart/element/type.dart' show DartType;
 
+/// Returns whether [type] is an exact-decimal value object.
+///
+/// d_rocket deliberately does not assume a storage representation for
+/// arbitrary Decimal/BigDecimal packages. Those values must be converted to
+/// one of the supported SQLite representations by the application.
+bool isDecimalValueObject(DartType type) {
+  final String name = type.element?.name ?? '';
+  return name == 'Decimal' || name == 'BigDecimal';
+}
+
+/// Error text shared by ORM and serializer code generation.
+String decimalConverterError(String fieldName, String typeName) =>
+    'Field $fieldName uses $typeName, but d_rocket has no implicit exact '
+    'decimal storage contract. Use double/num for approximate values, or '
+    'provide an explicit converter that maps the value to String, int, or '
+    'double before serialization and persistence.';
+
 /// Returns the source-level type name while preserving nullability.
 String dartTypeName(DartType type) => type.toString();
 

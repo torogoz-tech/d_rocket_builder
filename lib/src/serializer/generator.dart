@@ -5,6 +5,7 @@ import 'package:d_rocket/d_rocket.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../shared/utils.dart';
+import '../orm/type_support.dart';
 
 /// Annotation name for `SerializableUnion`.
 const _serializableUnionName = 'SerializableUnion';
@@ -538,6 +539,13 @@ void register${meta.className}Serializer() {
   ) {
     _validateFormatCompatibility(className, fieldName, typeStr, formats);
     final bool hasDateFormat = _hasDateFormat(formats);
+
+    if (isDecimalValueObject(type) &&
+        (converter == null || converter.isEmpty)) {
+      throw InvalidGenerationSourceError(
+        decimalConverterError('$className.$fieldName', typeStr),
+      );
+    }
 
     // Generic field: the field's declared type is one of the class's
     // type parameters (e.g. `T` in `class ApiResponse[T] { T data; }`).
