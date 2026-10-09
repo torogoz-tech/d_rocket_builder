@@ -5,6 +5,17 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] — planned
+
+### Fixed
+
+* Normalized nullable ORM type names so `String?` cannot become `String??`.
+* Generated safe row conversions for nullable and non-nullable `DateTime`.
+* Persisted `DateTime` values as ISO-8601 SQLite text.
+* Guarded nullable numeric JSON values before conversion.
+* Added regression coverage for JSON, SQLite, null values, DateTime and
+  decimal-equivalent numeric fields.
+
 ## [2.0.0] — 2026-06-22
 
 **Coordinated with `d_rocket` 2.0.0.** The
