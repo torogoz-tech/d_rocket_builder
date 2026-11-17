@@ -1,18 +1,20 @@
 # build.yaml for d_rocket_builder
 #
-# Registers five builders that together wire up d_rocket:
+# Registers seven builders that together wire up d_rocket:
 #
 #   d_rocket_builder:record            ->  *.g.dart                       (per-file, PartBuilder, default suffix)
 #   d_rocket_builder:serializer        ->  *.d_rocket_serializer.g.dart   (per-file, PartBuilder, Fase B suffix)
 #   d_rocket_builder:rest_client       ->  *.d_rocket_rest_client.g.dart  (per-file, PartBuilder, Fase C suffix)
 #   d_rocket_builder:rocket_table      ->  *.d_rocket_orm.g.dart          (per-file, PartBuilder, Fase 3 suffix)
+#   d_rocket_builder:form              ->  *.d_rocket_form.g.dart         (per-file, PartBuilder, forms suffix)
 #   d_rocket_builder:record_registry   ->  d_rocket_registry.g.dart       (per-package, LibraryBuilder)
 #
-# The four per-file builders use **distinct** `PartBuilder`
+# The six per-file builders use **distinct** `PartBuilder`
 # suffixes so a single Dart file can freely mix `extends Record`
 # (default `.g.dart`) + `@Serializable` (`d_rocket_serializer`)
 # + `@RestClient` (`d_rocket_rest_client`) + `@RocketTable`
-# (`d_rocket_orm`) without any build_runner output-collision.
+# (`d_rocket_orm`) + `@Form` (`d_rocket_form`) without any
+# build_runner output-collision.
 # This is the fix for the long-standing bug documented in
 # `HANDOFF.md` §6 of the legacy monorepo.
 #
@@ -62,6 +64,14 @@ builders:
     import: "package:d_rocket_builder/d_rocket_builder.dart"
     builder_factories: ["buildRocketTable"]
     build_extensions: {".dart": [".d_rocket_orm.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    required_inputs: []
+
+  d_rocket_builder:form:
+    import: "package:d_rocket_builder/d_rocket_builder.dart"
+    builder_factories: ["buildForm"]
+    build_extensions: {".dart": [".d_rocket_form.g.dart"]}
     auto_apply: dependents
     build_to: source
     required_inputs: []

@@ -1,11 +1,12 @@
 // Smoke test that verifies the `d_rocket_builder` `build.yaml` is
-// well-formed and declares the four builders expected by the
+// well-formed and declares the six per-file builders expected by the
 // d_rocket consumer:
 //
 //   1. `d_rocket_builder:record`            — PartBuilder, `.g.dart`
 //   2. `d_rocket_builder:serializer`        — PartBuilder, `.d_rocket_serializer.g.dart`
 //   3. `d_rocket_builder:rest_client`       — PartBuilder, `.d_rocket_rest_client.g.dart`
-//   4. `d_rocket_builder:record_registry`   — LibraryBuilder, `d_rocket_registry.g.dart`
+//   4. `d_rocket_builder:form`              — PartBuilder, `.d_rocket_form.g.dart`
+//   5. `d_rocket_builder:record_registry`   — LibraryBuilder, `d_rocket_registry.g.dart`
 //
 // We do NOT invoke `build_runner` here (that would require a
 // `package:build_config` dependency and a full project to build
@@ -29,11 +30,14 @@ void main() {
   });
 
   group('d_rocket_builder/build.yaml', () {
-    test('declares all four builders', () {
+    test('declares all builders', () {
       final String content = buildYaml.readAsStringSync();
+      expect(content, contains('d_rocket_builder:realtime:'));
       expect(content, contains('d_rocket_builder:record:'));
       expect(content, contains('d_rocket_builder:serializer:'));
       expect(content, contains('d_rocket_builder:rest_client:'));
+      expect(content, contains('d_rocket_builder:rocket_table:'));
+      expect(content, contains('d_rocket_builder:form:'));
       expect(content, contains('d_rocket_builder:record_registry:'));
     });
 
@@ -44,7 +48,8 @@ void main() {
           reason: 'record builder must use the default .g.dart suffix');
     });
 
-    test('serializer builder uses the non-default '
+    test(
+        'serializer builder uses the non-default '
         '.d_rocket_serializer.g.dart suffix (HANDOFF §6 fix)', () {
       final String content = buildYaml.readAsStringSync();
       final String block = _extractBlock(content, 'serializer');
@@ -57,7 +62,8 @@ void main() {
       );
     });
 
-    test('rest_client builder uses the non-default '
+    test(
+        'rest_client builder uses the non-default '
         '.d_rocket_rest_client.g.dart suffix (HANDOFF §6 fix)', () {
       final String content = buildYaml.readAsStringSync();
       final String block = _extractBlock(content, 'rest_client');
@@ -74,6 +80,17 @@ void main() {
       final String content = buildYaml.readAsStringSync();
       final String block = _extractBlock(content, 'record_registry');
       expect(block, contains('d_rocket_registry.g.dart'));
+    });
+
+    test('form builder uses the dedicated form suffix', () {
+      final String content = buildYaml.readAsStringSync();
+      final String block = _extractBlock(content, 'form');
+      expect(block, contains('.d_rocket_form.g.dart'));
+      expect(
+        block,
+        isNot(contains('".dart": [".g.dart"]')),
+        reason: 'form must not collide with the record builder',
+      );
     });
   });
 }

@@ -5,6 +5,16 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] — Unreleased
+
+### Added
+
+* Added opt-in `*.d_rocket_form.g.dart` adapters for model-driven forms;
+  serializer, REST and ORM outputs remain independent.
+* Added generated-form regression coverage for typed conversion, validation
+  and integration with `@Serializable` and `@RestClient`, including generic
+  field bindings, enum/format conversion and stable validation error codes.
+
 ## [2.1.0] — Unreleased
 
 ### Fixed

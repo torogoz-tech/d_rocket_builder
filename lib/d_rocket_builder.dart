@@ -1,6 +1,6 @@
 /// 🚀 d_rocket_builder — build_runner codegen for d_rocket.
 ///
-/// This package provides **five** build_runner builders that
+/// This package provides **seven** build_runner builders that
 /// together wire up the d_rocket framework:
 ///
 /// 1. `d_rocket_builder:record` (a `PartBuilder` with the
@@ -21,7 +21,11 @@
 ///    classes and emits a `part` file with a
 ///    `_$Table[ClassName].entityMeta` literal plus a
 ///    `register[ClassName]EntityMeta()` helper per class.
-/// 5. `d_rocket_builder:record_registry` (a `LibraryBuilder`) —
+/// 5. `d_rocket_builder:form` (a `PartBuilder` with the
+///    `.d_rocket_form.g.dart` suffix) — walks `@Form` classes and
+///    emits a model-bound form adapter with typed field state,
+///    conversion and validation.
+/// 6. `d_rocket_builder:record_registry` (a `LibraryBuilder`) —
 ///    scans the consumer's `lib/**.dart`, collects all `extends
 ///    Record` **and** all `@Serializable` **and** all
 ///    `@RestClient` **and** all `@Table` classes, and
@@ -49,15 +53,16 @@
 /// Before these phases, the codegen was split across three
 /// separate packages (`d_builder`, `d_serializer_build`,
 /// `d_rest_build`) with three separate `initializeD*()` calls.
-/// All four (records, serializers, REST clients, ORM tables)
-/// are now unified here under a single `initializeD()`.
+/// The record, serializer, REST and ORM builders are unified here under a
+/// single `initializeD()` registry, while realtime and form outputs remain
+/// independent per-file parts.
 ///
 /// ## Output namespaces
 ///
-/// The four per-file builders use **distinct** `PartBuilder`
+/// The six per-file builders use **distinct** `PartBuilder`
 /// suffixes so a single Dart file can use
 /// `extends Record` + `@Serializable` + `@RestClient` +
-/// `@Table` without any build error:
+/// `@Table` + `@Form` without any build error:
 ///
 /// - `record`        → `*.g.dart` (the default `source_gen` suffix
 ///                      for `extends Record` classes).
@@ -68,6 +73,8 @@
 ///                      non-default suffix, same rationale).
 /// - `rocket_table` → `*.d_rocket_orm.g.dart` ('s
 ///                      non-default suffix, same rationale).
+/// - `form`         → `*.d_rocket_form.g.dart` (non-default suffix,
+///                      same rationale).
 library d_rocket_builder;
 
 import 'package:build/build.dart';
@@ -80,6 +87,7 @@ import 'src/record_generator.dart';
 import 'src/record_registry_builder.dart';
 import 'src/rest/generator.dart';
 import 'src/serializer/generator.dart';
+import 'src/form/form_generator.dart';
 
 // 2.0.0 — Lints moved to the dedicated
 // `d_rocket_lints` package. We re-export
@@ -138,6 +146,17 @@ Builder buildRocketTable(BuilderOptions options) {
   );
 }
 
+/// Builder factory for `d_rocket_builder:form`.
+///
+/// Returns a [PartBuilder] with the `.d_rocket_form.g.dart` suffix. It walks
+/// classes annotated with `@Form` and emits a model-driven form adapter.
+Builder buildForm(BuilderOptions options) {
+  return PartBuilder(
+    <Generator>[const FormGenerator()],
+    '.d_rocket_form.g.dart',
+  );
+}
+
 /// Builder factory for `d_rocket_builder:record_registry`.
 ///
 /// Returns a [Builder] (a `LibraryBuilder`, not a `PartBuilder`)
@@ -193,7 +212,6 @@ Builder buildRealtime(BuilderOptions options) {
     '.d_rocket_realtime.g.dart',
   );
 }
-
 
 // ─── .h: custom_lint plugin ───────────────────────
 
