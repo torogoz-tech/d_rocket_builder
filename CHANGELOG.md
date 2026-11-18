@@ -5,6 +5,18 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] — 2026-11-18
+
+### Fixed
+
+* Shortened the package description to satisfy pub.dev's 60–180 character
+  search-description requirement.
+
+### Documentation
+
+* Clarified the `d_rocket_builder:form` output, generated adapter naming and
+  the paired 2.2.x package contract.
+
 ## [2.2.0] — 2026-11-18
 
 ### Added
