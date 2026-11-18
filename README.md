@@ -1,6 +1,6 @@
 # d_rocket_builder
 
-> **Codegen for the [d_rocket 2.0](https://pub.dev/packages/d_rocket) framework.**
+> **Codegen for the [d_rocket 2.2](https://pub.dev/packages/d_rocket) framework.**
 
 <p align="center">
   <img src="assets/banner.png" alt="d_rocket_builder banner" width="100%">
@@ -8,7 +8,7 @@
 
 This is the **build-time** companion to `d_rocket`. It runs under
 `build_runner` and emits all the wiring you don't want to write by
-hand: serializers, REST clients, ORM metadata, migrations, and
+hand: serializers, REST clients, ORM metadata, migrations, model-driven forms, and
 the central `initializeD()` registry call.
 
 ## Builders
@@ -22,6 +22,7 @@ the central `initializeD()` registry call.
 | `d_rocket_builder:record_registry` | A single `lib/d_rocket_registry.g.dart` that wires up everything via `initializeD()`. |
 | `d_rocket_builder:rocket_migration` | Per-`@Migration` function, a `_$<Name>` `MigrationBase` class. |
 | `d_rocket_builder:realtime` | Per-`@WebSocketClient` / `@SseClient`, a typed `Stream<T>` client. |
+| `d_rocket_builder:form` | Per-`@Form` model, a `<ModelName>Form` adapter with typed fields, conversion and validation. |
 
 The codegen is the reason the runtime can offer a single
 `initializeD()` call: every annotation in the project is collected
@@ -35,8 +36,8 @@ main dependencies — it never ships with the app):
 
 ```yaml
 dev_dependencies:
-  d_rocket: ^2.1.0
-  d_rocket_builder: ^2.1.0
+  d_rocket: ^2.2.0
+  d_rocket_builder: ^2.2.0
   build_runner: ^2.4.13
 ```
 
@@ -66,11 +67,11 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
-  d_rocket: ^2.1.0
+  d_rocket: ^2.2.0
   d_rocket_engine_sqlite: ^2.1.0
 
 dev_dependencies:
-  d_rocket_builder: ^2.1.0
+  d_rocket_builder: ^2.2.0
   build_runner: ^2.4.13
 ```
 
@@ -146,6 +147,17 @@ For a class `Qux` annotated with `@WebSocketClient` /
 `@SseClient`:
 
 - A typed `Stream<Qux>` client implementation.
+
+For a model `LoginRequest` annotated with `@Form`:
+
+- `LoginRequestForm` in `*.d_rocket_form.g.dart`.
+- Typed field states with `value`, `error`, `errors`, `errorCode`,
+  `bind()`, `bindRaw()`, `validate()` and `build()`.
+- Generated raw parsers for numeric, boolean, date and enum inputs.
+- Independent output from serializer, REST, ORM and realtime builders.
+
+The complete Forms contract and a Flutter login example are documented in
+[`doc/RELEASE_2.2.0.md`](doc/RELEASE_2.2.0.md).
 
 ## Lint rules
 
