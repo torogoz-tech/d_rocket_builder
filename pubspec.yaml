@@ -26,14 +26,11 @@ platforms:
 
 dependencies:
   d_rocket: ^2.2.2
-  d_rocket_lints: ^2.1.0
-  # 2.0.0 — bumped 9.0.0 → 10.0.1 in
-  # lockstep with `d_rocket_lints` (which
-  # moved to analysis_server_plugin ^0.3.7
-  # in Phase 8.7). analyzer 10.0.2+ is gated
-  # by d_rocket's flutter SDK pinning
-  # meta to 1.17.0.
-  analyzer: ^10.0.1
+  d_rocket_lints: ^2.2.2
+  # 2.2.2 — pinned Analyzer 13.0.0 in
+  # lockstep with `d_rocket_lints` and
+  # analysis_server_plugin 0.3.15.
+  analyzer: 13.0.0
   build: ^4.0.0
   source_gen: ^4.0.0
   path: ^1.9.0
@@ -43,4 +40,4 @@ dependencies:
 dev_dependencies:
   build_runner: ^2.4.13
   lints: ^6.0.0
-  test: ^1.30.0
+  test: ^1.31.2
