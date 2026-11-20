@@ -12,5 +12,17 @@ void main() {
     expect(source, isNot(contains(r"json['\$jsonKey']")));
     expect(source, contains('genericToJsonEntries'));
     expect(source, contains('final String genericToJsonBody'));
+    expect(source, contains('T Function(Object?) decode'));
+    expect(source, contains('Object? Function(T) encode'));
+    expect(
+      source,
+      isNot(contains(
+        r"decode$typeParamName(json['$jsonKey'] as Map<String, dynamic>)",
+      )),
+    );
+    expect(
+      source,
+      isNot(contains(r'decode$typeParamName($expr as Map<String, dynamic>)')),
+    );
   });
 }

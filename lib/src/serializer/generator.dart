@@ -416,7 +416,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
     // (e.g. `class ApiResponse[T]`) we need to:
     //   1. Add `<T>` to the fromJson/toJson signatures.
     //   2. Accept decoder/encoder function parameters for each type
-    //      parameter (e.g. `T Function(Map<String, dynamic>) decodeT`).
+    //      parameter (e.g. `T Function(Object?) decodeT`).
     //   3. Inject these calls in field expressions. The recursion
     //      into collection element types is already handled by
     //      `_toJsonExpr` / `_fromJsonExpr`, but those need to know
@@ -427,10 +427,10 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
     final String typeArgs =
         meta.isGeneric ? '<${meta.typeParameters.join(', ')}>' : '';
     final String decodeParams = meta.isGeneric
-        ? ',\n  ${meta.typeParameters.map((String t) => '$t Function(Map<String, dynamic>) decode$t').join(',\n  ')}'
+        ? ',\n  ${meta.typeParameters.map((String t) => '$t Function(Object?) decode$t').join(',\n  ')}'
         : '';
     final String encodeParams = meta.isGeneric
-        ? ',\n  ${meta.typeParameters.map((String t) => 'Map<String, dynamic> Function($t) encode$t').join(',\n  ')}'
+        ? ',\n  ${meta.typeParameters.map((String t) => 'Object? Function($t) encode$t').join(',\n  ')}'
         : '';
 
     // Generic classes cannot have a `toJson()` extension because
@@ -476,7 +476,9 @@ $toJsonExtension
     if (meta.isGeneric) {
       return '''
 /// Registers encoders/decoders for [${meta.className}]. You must
-/// provide a `decode[T]` and `encode[T]` for every type parameter
+/// provide a `decode[T]` and `encode[T]` for every type parameter.
+/// The callbacks receive or return raw JSON values, so they can represent
+/// objects, lists, maps and scalar values.
 /// that this class uses, and call this for every concrete
 /// instantiation:
 ///
@@ -487,8 +489,8 @@ $toJsonExtension
 /// );
 /// ```
 void register${meta.className}Serializer<T>({
-  required T Function(Map<String, dynamic>) decode,
-  required Map<String, dynamic> Function(T) encode,
+  required T Function(Object?) decode,
+  required Object? Function(T) encode,
 }) {
   Serializer.register<${meta.className}<T>>(
     fromJson: (Map<String, dynamic> json) =>
@@ -609,8 +611,8 @@ void register${meta.className}Serializer() {
           ? "$fieldName == null ? null : encode$typeParamName($fieldName as ${_nonNullableType(typeStr)})"
           : 'encode$typeParamName($fieldName)';
       fromExpr = nullable
-          ? "json['$jsonKey'] == null ? null : decode$typeParamName(json['$jsonKey'] as Map<String, dynamic>)"
-          : "decode$typeParamName(json['$jsonKey'] as Map<String, dynamic>)";
+          ? "json['$jsonKey'] == null ? null : decode$typeParamName(json['$jsonKey'])"
+          : "decode$typeParamName(json['$jsonKey'])";
       if (defaultValueCode != null) {
         fromExpr = "json['$jsonKey'] == null ? $defaultValueCode : $fromExpr";
       }
@@ -1093,7 +1095,7 @@ void register${meta.className}Serializer() {
     // Bare type parameter inside a collection: `List<T>`, `Map<String, T>`.
     final String? typeParamName = _typeParameterName(type, typeParameterNames);
     if (typeParamName != null) {
-      return 'decode$typeParamName($expr as Map<String, dynamic>)';
+      return 'decode$typeParamName($expr)';
     }
     if (type is InterfaceType && type.isDartCoreList) {
       final DartType typeArg = type.typeArguments.first;
