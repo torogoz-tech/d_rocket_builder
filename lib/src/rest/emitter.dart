@@ -28,8 +28,12 @@ String emitClient(ParsedClient client) {
   buffer
       .writeln('class _\$${client.className} implements ${client.className} {');
   buffer.writeln('  _\$${client.className}({RestClientConfig? config})');
-  buffer.writeln('      : _client = config?.build(dRest.client);');
+  buffer.writeln('      : _client = config?.build(dRest.client),');
+  buffer.writeln(
+    "        _baseUrl = config?.baseUrl ?? ${_quoteString(client.baseUrl)};",
+  );
   buffer.writeln('  final HttpClient? _client;');
+  buffer.writeln('  final String _baseUrl;');
   buffer.writeln();
   buffer.writeln('  /// Crea una instancia del cliente tipado.');
   buffer.writeln(
@@ -144,11 +148,10 @@ void _emitMethod(
   }
 
   // Build the request
-  final String baseUrlLiteral = _quoteString(client.baseUrl);
   buffer.writeln('    final RestRequest _request = RestRequest(');
   buffer.writeln("      method: '${method.verb}',");
   buffer.writeln("      path: ${_quoteString(fullPath)},");
-  buffer.writeln('      baseUrl: $baseUrlLiteral,');
+  buffer.writeln('      baseUrl: _baseUrl,');
   buffer.writeln('      headers: _headers,');
   if (bodyParams.isNotEmpty) {
     buffer.writeln('      body: $bodyExpr,');
@@ -179,9 +182,12 @@ void _emitMethod(
     buffer.writeln('    );');
   } else {
     final String t = method.returnType.dartType;
+    final String decoderType =
+        t.endsWith('?') ? t.substring(0, t.length - 1) : t;
     buffer.writeln('    return invokeRequest<$t>(');
     buffer.writeln('      _request,');
-    buffer.writeln('      (dynamic data) => dRest.decodeBody<$t>(data),');
+    buffer.writeln(
+        '      (dynamic data) => dRest.decodeBody<$decoderType>(data),');
     buffer.writeln('      client: _client,');
     buffer.writeln('    );');
   }

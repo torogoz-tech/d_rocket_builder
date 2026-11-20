@@ -31,6 +31,8 @@ class FormSourceWriter {
 
     output
       ..writeln(
+          '    List<FormValidator<${metadata.className}>> validators = const <FormValidator<${metadata.className}>>[],')
+      ..writeln(
           '    FormValidationMode validationMode = FormValidationMode.onSubmit,')
       ..writeln('  }) : state = _createState(');
 
@@ -46,6 +48,7 @@ class FormSourceWriter {
       );
     }
     output
+      ..writeln('    validators,')
       ..writeln('    validationMode,')
       ..writeln('  );')
       ..writeln()
@@ -87,6 +90,10 @@ class FormSourceWriter {
       ..writeln('  bool validate() => state.validate();')
       ..writeln('  ${metadata.className} build() => state.build();')
       ..writeln()
+      ..writeln('  void Function(TValue) bindComposite<TValue>(')
+      ..writeln('    Map<String, Object?> Function(TValue value) mapper,')
+      ..writeln('  ) => state.bindComposite(mapper);')
+      ..writeln()
       ..writeln('  static FormState<${metadata.className}> _createState(');
 
     for (final ({
@@ -102,6 +109,7 @@ class FormSourceWriter {
     }
 
     output
+      ..writeln('    List<FormValidator<${metadata.className}>> validators,')
       ..writeln('    FormValidationMode validationMode,')
       ..writeln('  ) {')
       ..writeln('    final fields = <String, FormFieldState<Object?>>{');
@@ -135,6 +143,7 @@ class FormSourceWriter {
       ..writeln('    };')
       ..writeln('    final form = FormState<${metadata.className}>(')
       ..writeln('      fields: fields,')
+      ..writeln('      validators: validators,')
       ..writeln('      builder: () => ${metadata.className}(');
 
     for (final ({
@@ -346,6 +355,7 @@ class FormSourceWriter {
   String _escape(String value) => value
       .replaceAll(r'\', r'\\')
       .replaceAll("'", r"\'")
+      .replaceAll(r'$', r'\$')
       .replaceAll('\n', r'\n');
 
   String _nullableString(String? value) =>

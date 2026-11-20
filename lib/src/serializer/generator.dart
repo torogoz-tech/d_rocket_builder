@@ -735,7 +735,10 @@ void register${meta.className}Serializer() {
       fromExpr = "json['$jsonKey']";
     } else {
       toExpr = 'Serializer.encodeDynamic($fieldName)';
-      fromExpr = "Serializer.fromDynamic<$typeStr>(json['$jsonKey'])";
+      final String nonNullableType = _nonNullableType(typeStr);
+      fromExpr = typeStr.endsWith('?')
+          ? "json['$jsonKey'] == null ? null : Serializer.fromDynamic<$nonNullableType>(json['$jsonKey'])"
+          : "Serializer.fromDynamic<$nonNullableType>(json['$jsonKey'])";
     }
 
     if (defaultValueCode != null) {
@@ -1031,6 +1034,17 @@ void register${meta.className}Serializer() {
     required String? unknownEnumValue,
     required Set<String> typeParameterNames,
   }) {
+    if (typeStr.endsWith('?')) {
+      return '$expr == null ? null : ${_fromJsonExpr(
+        expr,
+        _nonNullableType(typeStr),
+        type,
+        useEnumIndex: useEnumIndex,
+        unknownEnumValue: unknownEnumValue,
+        typeParameterNames: typeParameterNames,
+      )}';
+    }
+
     // Bare type parameter inside a collection: `List<T>`, `Map<String, T>`.
     final String? typeParamName = _typeParameterName(type, typeParameterNames);
     if (typeParamName != null) {

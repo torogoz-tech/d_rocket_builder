@@ -5,6 +5,23 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] — 2026-11-20
+
+### Fixed
+
+* Escaped generated form string literals correctly, including `$` in
+  `@Pattern` expressions.
+* Nullable nested serializer models now guard `null` and deserialize present
+  values through the non-nullable registered model type.
+* Generated REST clients now accept a per-instance `RestClientConfig.baseUrl`
+  override instead of requiring the annotated URL to be fixed at generation.
+
+### Added
+
+* Generated form adapters accept model-level validators for cross-field rules.
+* Generated form adapters expose `bindComposite()` for controls that update
+  several model fields, such as `MM/YY` or a compound license plate.
+
 ## [2.2.1] — 2026-11-18
 
 ### Fixed
