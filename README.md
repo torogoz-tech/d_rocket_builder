@@ -36,8 +36,8 @@ main dependencies — it never ships with the app):
 
 ```yaml
 dev_dependencies:
-  d_rocket: ^2.2.2
-  d_rocket_builder: ^2.2.2
+  d_rocket: ^2.2.3
+  d_rocket_builder: ^2.2.3
   build_runner: ^2.4.13
 ```
 
@@ -67,11 +67,11 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
-  d_rocket: ^2.2.2
+  d_rocket: ^2.2.3
   d_rocket_engine_sqlite: ^2.1.0
 
 dev_dependencies:
-  d_rocket_builder: ^2.2.2
+  d_rocket_builder: ^2.2.3
   build_runner: ^2.4.13
 ```
 

@@ -5,6 +5,22 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.3] — 2026-11-20
+
+### Fixed
+
+* Generic serializer code now interpolates type-parameter and JSON-key names
+  correctly for nullable fields such as `T? data`.
+* Generic `ToJson` functions now emit the serialized map directly instead of
+  calling a nonexistent `toJson()` method on the generic model.
+* Nullable generic fields use an explicit non-nullable cast after the null
+  guard so the generated code compiles with Dart's property-promotion rules.
+
+### Tests
+
+* Added regression coverage for generic serializer templates and validated a
+  generated `Response<T>` model with `build_runner` and `dart analyze`.
+
 ## [2.2.2] — 2026-11-20
 
 ### Fixed

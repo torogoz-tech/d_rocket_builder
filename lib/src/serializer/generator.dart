@@ -121,6 +121,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
       ...meta.typeParameters,
     };
     final List<String> toJsonEntries = <String>[];
+    final List<String> genericToJsonEntries = <String>[];
     final List<String> fromJsonParams = <String>[];
     final List<String> fromJsonGuards = <String>[];
     final List<String> knownKeys = <String>[];
@@ -134,6 +135,8 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
         "at ${meta.typeField}: expected ${meta.resolvedDiscriminator}'); }",
       );
       toJsonEntries
+          .add("'${meta.typeField}': '${meta.resolvedDiscriminator}',");
+      genericToJsonEntries
           .add("'${meta.typeField}': '${meta.resolvedDiscriminator}',");
     }
 
@@ -152,6 +155,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
         field,
         knownKeys,
         toJsonEntries,
+        genericToJsonEntries,
         fromJsonParams,
         fromJsonGuards,
         typeParameterNames,
@@ -183,6 +187,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
 
     return _GenerationPlan(
       toJsonEntries: toJsonEntries,
+      genericToJsonEntries: genericToJsonEntries,
       fromJsonParams: fromJsonParams,
       fromJsonGuards: fromJsonGuards,
     );
@@ -193,6 +198,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
     FieldElement field,
     List<String> knownKeys,
     List<String> toJsonEntries,
+    List<String> genericToJsonEntries,
     List<String> fromJsonParams,
     List<String> fromJsonGuards,
     Set<String> typeParameterNames,
@@ -214,6 +220,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
         typeStr,
         type,
         toJsonEntries,
+        genericToJsonEntries,
         fromJsonParams,
         false,
         null,
@@ -263,6 +270,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
       typeStr,
       type,
       toJsonEntries,
+      genericToJsonEntries,
       fromJsonParams,
       useEnumIndex,
       defaultValueCode,
@@ -391,6 +399,8 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
   ) {
     final String toJsonBody =
         'return <String, dynamic>{\n${plan.toJsonEntries.join('\n')}\n};';
+    final String genericToJsonBody =
+        'return <String, dynamic>{\n${plan.genericToJsonEntries.join('\n')}\n};';
     final String fromJsonBody =
         'return ${meta.className}(\n${plan.fromJsonParams.join('\n')}\n);';
     final String guards = plan.fromJsonGuards.isEmpty
@@ -448,7 +458,7 @@ ${meta.className}$typeArgs ${meta.className}FromJson$typeArgs(Map<String, dynami
 }
 
 Map<String, dynamic> ${meta.className}ToJson$typeArgs(${meta.className}$typeArgs value$encodeParams) {
-  return value.toJson();
+  $genericToJsonBody
 }
 $unionRegistration
 $toJsonExtension
@@ -529,6 +539,7 @@ void register${meta.className}Serializer() {
     String typeStr,
     DartType type,
     List<String> toJsonEntries,
+    List<String> genericToJsonEntries,
     List<String> fromJsonParams,
     bool useEnumIndex,
     String? defaultValueCode,
@@ -577,7 +588,13 @@ void register${meta.className}Serializer() {
       toExpr = _applyFormattersToJsonExpr(toExpr, typeStr, formats);
       fromExpr = _applyFormattersFromJsonExpr(fromExpr, typeStr, formats);
       fromJsonParams.add('$fieldName: $fromExpr,');
-      toJsonEntries.add("'$jsonKey': $toExpr,");
+      _addToJsonEntries(
+        toJsonEntries,
+        genericToJsonEntries,
+        jsonKey,
+        toExpr,
+        fieldName,
+      );
       return;
     }
 
@@ -589,15 +606,21 @@ void register${meta.className}Serializer() {
     if (typeParamName != null) {
       final bool nullable = typeStr.endsWith('?');
       toExpr = nullable
-          ? "$fieldName == null ? null : encode\$typeParamName($fieldName)"
+          ? "$fieldName == null ? null : encode$typeParamName($fieldName as ${_nonNullableType(typeStr)})"
           : 'encode$typeParamName($fieldName)';
       fromExpr = nullable
-          ? "json['$jsonKey'] == null ? null : decode\$typeParamName(json['\$jsonKey'] as Map<String, dynamic>)"
-          : "decode$typeParamName(json['\$jsonKey'] as Map<String, dynamic>)";
+          ? "json['$jsonKey'] == null ? null : decode$typeParamName(json['$jsonKey'] as Map<String, dynamic>)"
+          : "decode$typeParamName(json['$jsonKey'] as Map<String, dynamic>)";
       if (defaultValueCode != null) {
         fromExpr = "json['$jsonKey'] == null ? $defaultValueCode : $fromExpr";
       }
-      toJsonEntries.add("'$jsonKey': $toExpr,");
+      _addToJsonEntries(
+        toJsonEntries,
+        genericToJsonEntries,
+        jsonKey,
+        toExpr,
+        fieldName,
+      );
       fromJsonParams.add('$fieldName: $fromExpr,');
       return;
     }
@@ -748,8 +771,30 @@ void register${meta.className}Serializer() {
     toExpr = _applyFormattersToJsonExpr(toExpr, typeStr, formats);
     fromExpr = _applyFormattersFromJsonExpr(fromExpr, typeStr, formats);
 
-    toJsonEntries.add("'$jsonKey': $toExpr,");
+    _addToJsonEntries(
+      toJsonEntries,
+      genericToJsonEntries,
+      jsonKey,
+      toExpr,
+      fieldName,
+    );
     fromJsonParams.add('$fieldName: $fromExpr,');
+  }
+
+  void _addToJsonEntries(
+    List<String> toJsonEntries,
+    List<String> genericToJsonEntries,
+    String jsonKey,
+    String expression,
+    String fieldName,
+  ) {
+    toJsonEntries.add("'$jsonKey': $expression,");
+    final RegExp fieldReference = RegExp(
+      r'\b' + RegExp.escape(fieldName) + r'\b',
+    );
+    genericToJsonEntries.add(
+      "'$jsonKey': ${expression.replaceAll(fieldReference, 'value.$fieldName')},",
+    );
   }
 
   bool _hasDateFormat(List<_FormatSpec> formats) {
@@ -1244,11 +1289,13 @@ class _ClassMetadata {
 class _GenerationPlan {
   const _GenerationPlan({
     required this.toJsonEntries,
+    required this.genericToJsonEntries,
     required this.fromJsonParams,
     required this.fromJsonGuards,
   });
 
   final List<String> toJsonEntries;
+  final List<String> genericToJsonEntries;
   final List<String> fromJsonParams;
   final List<String> fromJsonGuards;
 }
