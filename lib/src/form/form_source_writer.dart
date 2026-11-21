@@ -187,7 +187,7 @@ class FormSourceWriter {
         return "          (value) => value is String && !RegExp('$expression').hasMatch(value) ? FormError(code: '${_readString(annotation, 'code', 'pattern.invalid')}', message: '${_readString(annotation, 'message', 'El formato no es válido')}') : null,";
       case 'Uuid':
         final UuidVersion? version = _readUuidVersion(annotation);
-        return "          (value) => value is String && !RegExp('${uuidPattern(version)}').hasMatch(value) ? FormError(code: '${_readString(annotation, 'code', 'uuid.invalid')}', message: '${_readString(annotation, 'message', 'El UUID no es válido')}') : null,";
+        return "          (value) => value is String && !RegExp('${_escape(uuidPattern(version))}').hasMatch(value) ? FormError(code: '${_readString(annotation, 'code', 'uuid.invalid')}', message: '${_readString(annotation, 'message', 'El UUID no es válido')}') : null,";
       case 'Range':
         final num? min = _readNullableNum(annotation, 'min');
         final num? max = _readNullableNum(annotation, 'max');

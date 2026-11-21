@@ -5,6 +5,15 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] — 2026-11-21
+
+### Added
+
+* Form code generation now supports `@Uuid()` and optional
+  `UuidVersion.v1` through `UuidVersion.v8` restrictions.
+* Generated UUID validators preserve custom messages and stable validation
+  codes and compile canonical UUID patterns with escaped Dart literals.
+
 ## [2.4.2] — 2026-11-21
 
 ### Fixed
