@@ -52,6 +52,9 @@ import 'package:glob/glob.dart';
 import 'orm/registry.dart';
 import 'realtime/registry.dart';
 import 'rest/registry.dart';
+import 'serializer/contract_registry_emitter.dart';
+import 'serializer/contract_type.dart';
+import 'serializer/contract_type_collector.dart';
 import 'serializer/registry.dart';
 
 /// Discovers every `extends Record` and every `@Serializable` class
@@ -64,8 +67,7 @@ class RecordRegistryBuilder implements Builder {
   /// `extends Record` classes — in `lib/**` and in `lib/example/**`
   /// — are picked up and registered from there.
   @override
-  Map<String, List<String>> get buildExtensions =>
-      <String, List<String>>{
+  Map<String, List<String>> get buildExtensions => <String, List<String>>{
         r'$lib$': <String>['d_rocket_registry.g.dart'],
       };
 
@@ -92,6 +94,10 @@ class RecordRegistryBuilder implements Builder {
         <String, Set<String>>{};
     final Map<String, Set<String>> serializableClassesByFile =
         <String, Set<String>>{};
+    final Map<String, Set<String>> genericSerializableClassesByFile =
+        <String, Set<String>>{};
+    final Map<String, String> genericSerializableLibraryPaths =
+        <String, String>{};
     final Map<String, Set<String>> restClientClassesByFile =
         <String, Set<String>>{};
     final Map<String, Set<String>> ormTableClassesByFile =
@@ -100,6 +106,7 @@ class RecordRegistryBuilder implements Builder {
         <String, Set<String>>{};
     final Map<String, Set<String>> sseClientClassesByFile =
         <String, Set<String>>{};
+    final List<ClassElement> contractClients = <ClassElement>[];
 
     // Walk every `.dart` file under `lib/`, including nested
     // directories like `lib/example/`. (For a typical app, all
@@ -135,9 +142,7 @@ class RecordRegistryBuilder implements Builder {
 
         // Record detection: `extends Record` (from package:d_rocket).
         if (_extendsRecord(cls)) {
-          recordClassesByFile
-              .putIfAbsent(libPath, () => <String>{})
-              .add(name);
+          recordClassesByFile.putIfAbsent(libPath, () => <String>{}).add(name);
         }
 
         // Serializer detection: `@Serializable` (from package:d_rocket
@@ -151,6 +156,11 @@ class RecordRegistryBuilder implements Builder {
             serializableClassesByFile
                 .putIfAbsent(libPath, () => <String>{})
                 .add(name);
+          } else {
+            genericSerializableClassesByFile
+                .putIfAbsent(libPath, () => <String>{})
+                .add(name);
+            genericSerializableLibraryPaths[name] = libPath;
           }
         }
 
@@ -162,6 +172,7 @@ class RecordRegistryBuilder implements Builder {
           restClientClassesByFile
               .putIfAbsent(libPath, () => <String>{})
               .add(name);
+          contractClients.add(cls);
         }
 
         // ORM table detection: `@Table` from
@@ -183,11 +194,13 @@ class RecordRegistryBuilder implements Builder {
           webSocketClientClassesByFile
               .putIfAbsent(libPath, () => <String>{})
               .add(name);
+          contractClients.add(cls);
         }
         if (hasSseClientAnnotation(cls) && cls.isAbstract) {
           sseClientClassesByFile
               .putIfAbsent(libPath, () => <String>{})
               .add(name);
+          contractClients.add(cls);
         }
       }
     }
@@ -196,6 +209,7 @@ class RecordRegistryBuilder implements Builder {
     final List<String> allFiles = <String>{
       ...recordClassesByFile.keys,
       ...serializableClassesByFile.keys,
+      ...genericSerializableClassesByFile.keys,
       ...restClientClassesByFile.keys,
       ...ormTableClassesByFile.keys,
       ...webSocketClientClassesByFile.keys,
@@ -235,6 +249,13 @@ class RecordRegistryBuilder implements Builder {
       importEntries.add(importPath);
       out.writeln("import '$importPath' as _m${importEntries.length - 1};");
     }
+    final Map<String, int> importIndexes = <String, int>{
+      for (int i = 0; i < allFiles.length; i++) allFiles[i]: i,
+    };
+    final List<ContractType> contractTypes = ContractTypeCollector.fromClients(
+      contractClients,
+      genericLibraryPaths: genericSerializableLibraryPaths,
+    );
 
     out
       ..writeln()
@@ -289,6 +310,14 @@ class RecordRegistryBuilder implements Builder {
         out.writeln('  _m$i.register${className}Serializer();');
       }
     }
+
+    // 2b. Register concrete generic shapes discovered in REST/realtime
+    // contracts after their non-generic dependencies are available.
+    final String contractRegistrations = ContractRegistryEmitter.emit(
+      contractTypes,
+      importIndexes: importIndexes,
+    );
+    if (contractRegistrations.isNotEmpty) out.write(contractRegistrations);
 
     // 3. REST clients (so any `@Serializable` class that is
     //    also a body type for a `@RestClient` is registered

@@ -120,6 +120,14 @@ void main() {
 }
 ```
 
+When a generated REST or realtime contract returns a concrete generic model,
+the registry also emits its serializer registration. For example,
+`ResponseModel<VehicleResponse>` and
+`ResponseModel<List<VehicleResponse>>` are discovered from the client methods,
+including the nested list decoder. No manual registration is needed for those
+contract shapes; unconstrained generic classes are still left for explicit
+application registration.
+
 ## What gets generated
 
 For a class `Foo` annotated with `@Serializable()`:
