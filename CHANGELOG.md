@@ -5,7 +5,7 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.4.0] — 2026-11-21
 
 ### Added
 
@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and realtime client contracts, including nested list arguments, and emits
   deterministic registration calls. Generic classes remain unregistered until
   a concrete contract supplies their type arguments.
+* Generated generic registrations qualify imported model and collection types
+  with their registry aliases, so the emitted Dart compiles across source
+  libraries.
+
+### Compatibility
+
+* Updated the lockstep runtime dependency to `d_rocket ^2.4.0` for observable
+  form field changes and shared transport integrations.
 
 ## [2.3.0] — 2026-11-21
 

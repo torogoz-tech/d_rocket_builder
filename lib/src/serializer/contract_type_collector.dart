@@ -63,7 +63,8 @@ class ContractTypeCollector {
         ContractType.fromDartType(
           type,
           libraryPathFor: (String name, DartType _) =>
-              genericLibraryPaths[name] ?? libraryPath,
+              genericLibraryPaths[name] ??
+              (_coreCollectionNames.contains(name) ? 'dart:core' : libraryPath),
         ),
       );
     }
@@ -76,4 +77,11 @@ class ContractTypeCollector {
       );
     }
   }
+
+  static const Set<String> _coreCollectionNames = <String>{
+    'Iterable',
+    'List',
+    'Map',
+    'Set',
+  };
 }

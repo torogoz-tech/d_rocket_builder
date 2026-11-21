@@ -17,12 +17,13 @@ class ContractRegistryEmitter {
       final int? importIndex = importIndexes[type.libraryPath];
       if (importIndex == null) continue;
       final ContractType argument = type.typeArguments.single;
+      final String argumentName = _typeName(argument, importIndexes);
       output
         ..writeln(
-          '  _m$importIndex.register${type.className}Serializer<${argument.displayName}>(',
+          '  _m$importIndex.register${type.className}Serializer<$argumentName>(',
         )
         ..writeln(
-          '    decode: (Object? value) => ${_decode(argument, 'value')},',
+          '    decode: (Object? value) => ${_decodeWithImports(argument, 'value', importIndexes)},',
         )
         ..writeln('    encode: Serializer.encodeDynamic,')
         ..writeln('  );');
@@ -30,20 +31,36 @@ class ContractRegistryEmitter {
     return output.toString();
   }
 
-  static String _decode(ContractType type, String expression) {
+  static String _decodeWithImports(
+    ContractType type,
+    String expression,
+    Map<String, int> importIndexes,
+  ) {
     if (type.className == 'List' && type.typeArguments.length == 1) {
       final ContractType item = type.typeArguments.single;
       return '(($expression as List<dynamic>)'
-          '.map((item) => ${_decode(item, 'item')}).toList())';
+          '.map((item) => ${_decodeWithImports(item, 'item', importIndexes)}).toList())';
     }
     if (type.className == 'Set' && type.typeArguments.length == 1) {
       final ContractType item = type.typeArguments.single;
       return '(($expression as List<dynamic>)'
-          '.map((item) => ${_decode(item, 'item')}).toSet())';
+          '.map((item) => ${_decodeWithImports(item, 'item', importIndexes)}).toSet())';
     }
     if (type.className == 'Map' && type.typeArguments.length == 2) {
-      return 'Serializer.fromDynamic<${type.displayName}>($expression)';
+      return 'Serializer.fromDynamic<${_typeName(type, importIndexes)}>($expression)';
     }
-    return 'Serializer.fromDynamic<${type.displayName}>($expression)';
+    return 'Serializer.fromDynamic<${_typeName(type, importIndexes)}>($expression)';
+  }
+
+  static String _typeName(
+    ContractType type,
+    Map<String, int> importIndexes,
+  ) {
+    final int? importIndex = importIndexes[type.libraryPath];
+    final String prefix = importIndex == null ? '' : '_m$importIndex.';
+    final String arguments = type.typeArguments.isEmpty
+        ? ''
+        : '<${type.typeArguments.map((ContractType item) => _typeName(item, importIndexes)).join(', ')}>';
+    return '$prefix${type.className}$arguments';
   }
 }

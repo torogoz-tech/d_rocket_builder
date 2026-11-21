@@ -50,24 +50,27 @@ void main() {
   test('emits concrete generic registrations with nested list decoding', () {
     final String output = ContractRegistryEmitter.emit(
       <ContractType>[response, responseList],
-      importIndexes: <String, int>{'lib/response_model.dart': 0},
+      importIndexes: <String, int>{
+        'lib/response_model.dart': 0,
+        'lib/vehicle_response.dart': 1,
+      },
     );
 
     expect(
         output,
         contains(
-          '_m0.registerResponseModelSerializer<VehicleResponse>',
+          '_m0.registerResponseModelSerializer<_m1.VehicleResponse>',
         ));
     expect(
         output,
         contains(
-          '_m0.registerResponseModelSerializer<List<VehicleResponse>>',
+          '_m0.registerResponseModelSerializer<List<_m1.VehicleResponse>>',
         ));
     expect(
         output,
         contains(
           '(value as List<dynamic>).map((item) => '
-          'Serializer.fromDynamic<VehicleResponse>(item)).toList()',
+          'Serializer.fromDynamic<_m1.VehicleResponse>(item)).toList()',
         ));
   });
 
