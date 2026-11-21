@@ -59,6 +59,7 @@ class ParsedParameter {
   final bool isRequired;
   final bool isNullable;
   final bool isNamed;
+  final bool isEnum;
 
   ParsedParameter({
     required this.name,
@@ -68,6 +69,7 @@ class ParsedParameter {
     required this.isRequired,
     required this.isNullable,
     required this.isNamed,
+    this.isEnum = false,
   });
 }
 
@@ -228,9 +230,8 @@ class ClientParser {
       // in case analyzer's representation changes
       // in a future SDK.
       final String repr = verbValue.toString();
-      final RegExpMatch? m = RegExp(
-              r"path\s*:\s*(?:'([^']*)'|(\/[^,)]+))")
-          .firstMatch(repr);
+      final RegExpMatch? m =
+          RegExp(r"path\s*:\s*(?:'([^']*)'|(\/[^,)]+))").firstMatch(repr);
       if (m != null) {
         verbPath = m.group(1) ?? m.group(2) ?? '';
       }
@@ -239,8 +240,7 @@ class ClientParser {
     // problem as `path` (see comment above for
     // details). Look in (super) if not found
     // at the top level.
-    Map<String, String> methodHeaders =
-        _readStringMap(verbValue, 'headers');
+    Map<String, String> methodHeaders = _readStringMap(verbValue, 'headers');
     if (methodHeaders.isEmpty) {
       final DartObject? superValue = verbValue.getField('(super)');
       if (superValue != null) {
@@ -315,6 +315,7 @@ class ClientParser {
       isRequired: p.isRequired,
       isNullable: p.type.nullabilitySuffix == NullabilitySuffix.question,
       isNamed: p.isNamed,
+      isEnum: p.type.element is EnumElement,
     );
   }
 

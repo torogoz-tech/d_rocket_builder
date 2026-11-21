@@ -86,5 +86,57 @@ void main() {
             'explicit converter',
           ));
     });
+
+    test('enum values are written to SQLite as their names', () {
+      expect(
+        emitOrmSqlValue(
+          fieldExpression: 'entity.status',
+          typeName: 'LocationStatus',
+          nullable: false,
+          isEnum: true,
+        ),
+        '(entity.status).name',
+      );
+      expect(
+        emitOrmSqlValue(
+          fieldExpression: 'entity.status',
+          typeName: 'LocationStatus?',
+          nullable: true,
+          isEnum: true,
+        ),
+        'entity.status == null ? null : (entity.status)!.name',
+      );
+    });
+
+    test('SQLite enum text values are decoded by enum name', () {
+      final String expression = emitOrmRowValue(
+        rawExpression: "r['status']",
+        typeName: 'LocationStatus',
+        fieldName: 'status',
+        nullable: false,
+        isEnum: true,
+      );
+
+      expect(expression, contains('LocationStatus.values.firstWhere'));
+      expect(expression, contains("candidate.name == (r['status'] as String)"));
+      expect(expression, contains('Column status is NULL'));
+    });
+
+    test('enum decoding can use an explicit unknown-value fallback', () {
+      final String expression = emitOrmRowValue(
+        rawExpression: "r['status']",
+        typeName: 'LocationStatus',
+        fieldName: 'status',
+        nullable: false,
+        isEnum: true,
+        unknownEnumValue: 'unavailable',
+      );
+
+      expect(
+        expression,
+        contains('LocationStatus.values.byName("unavailable")'),
+      );
+      expect(expression, isNot(contains('Unknown enum value')));
+    });
   });
 }

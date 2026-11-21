@@ -5,6 +5,26 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] — 2026-11-21
+
+### Added
+
+* ORM codegen now persists enum fields as SQLite `TEXT` using the enum name and
+  materializes SQLite text back into the declared enum type.
+* `@JsonKey(unknownEnumValue: ...)` is honored by ORM enum materialization as
+  an explicit fallback policy; without it, unknown values fail clearly.
+* Generated REST clients serialize enum path, query and header parameters by
+  their `.name` value.
+
+### Fixed
+
+* Nullable enum serialization no longer emits an invalid `orElse: () => null`
+  callback for non-nullable `Iterable.firstWhere` APIs.
+
+### Tests
+
+* Added strict ORM, serializer, form and REST enum regression coverage.
+
 ## [2.2.5] — 2026-11-20
 
 ### Fixed

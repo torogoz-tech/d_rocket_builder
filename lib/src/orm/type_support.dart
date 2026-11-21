@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:analyzer/dart/element/type.dart' show DartType;
 
 /// Returns whether [type] is an exact-decimal value object.
@@ -31,13 +33,24 @@ String emitOrmRowValue({
   required String typeName,
   required String fieldName,
   required bool nullable,
+  bool isEnum = false,
+  String? unknownEnumValue,
 }) {
   final String baseTypeName = nonNullableTypeName(typeName);
+  final String unknownEnumExpression = unknownEnumValue == null
+      ? "throw StateError('Unknown value for $fieldName: ' "
+          "+ $rawExpression.toString())"
+      : '$baseTypeName.values.byName(${jsonEncode(unknownEnumValue)})';
+  final String enumExpression =
+      '$baseTypeName.values.firstWhere((candidate) => '
+      'candidate.name == ($rawExpression as String), '
+      'orElse: () => $unknownEnumExpression)';
   final String dateExpression =
       '($rawExpression is DateTime ? $rawExpression : '
       'DateTime.parse($rawExpression as String))';
 
   final String valueExpression = switch (baseTypeName) {
+    _ when isEnum => enumExpression,
     'DateTime' => dateExpression,
     'int' => '($rawExpression as num).toInt()',
     'double' => '($rawExpression as num).toDouble()',
@@ -73,8 +86,14 @@ String emitOrmSqlValue({
   required String fieldExpression,
   required String typeName,
   required bool nullable,
+  bool isEnum = false,
 }) {
   final String baseTypeName = nonNullableTypeName(typeName);
+  if (isEnum) {
+    return nullable
+        ? '$fieldExpression == null ? null : ($fieldExpression)!.name'
+        : '($fieldExpression).name';
+  }
   if (baseTypeName != 'DateTime') return fieldExpression;
   final String converted = '($fieldExpression as DateTime).toIso8601String()';
   return nullable ? '$fieldExpression == null ? null : $converted' : converted;

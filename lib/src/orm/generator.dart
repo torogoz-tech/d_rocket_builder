@@ -1,6 +1,7 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart'
     show NullabilitySuffix;
+import 'package:analyzer/dart/element/type.dart' show DartType;
 import 'package:build/build.dart';
 import 'package:d_rocket/d_rocket.dart';
 import 'package:source_gen/source_gen.dart';
@@ -518,12 +519,12 @@ ${entries.toString().trimRight()}
         // PKs are always present.
         body.writeln(
           '    final ${type} _${spec.field.displayName} = '
-          '${emitOrmRowValue(rawExpression: rawExpression, typeName: type, fieldName: spec.field.displayName, nullable: false)};',
+          '${emitOrmRowValue(rawExpression: rawExpression, typeName: type, fieldName: spec.field.displayName, nullable: false, isEnum: _isEnumType(spec.field.type), unknownEnumValue: _unknownEnumValue(spec.field))};',
         );
       } else {
         body.writeln(
           '    final ${type} _${spec.field.displayName} = '
-          '${emitOrmRowValue(rawExpression: rawExpression, typeName: type, fieldName: spec.field.displayName, nullable: spec.isNullable)};',
+          '${emitOrmRowValue(rawExpression: rawExpression, typeName: type, fieldName: spec.field.displayName, nullable: spec.isNullable, isEnum: _isEnumType(spec.field.type), unknownEnumValue: _unknownEnumValue(spec.field))};',
         );
       }
     }
@@ -548,7 +549,16 @@ ${entries.toString().trimRight()}
       fieldExpression: fieldExpression,
       typeName: type,
       nullable: spec.isNullable,
+      isEnum: _isEnumType(spec.field.type),
     );
+  }
+
+  bool _isEnumType(DartType type) => type.element is EnumElement;
+
+  String? _unknownEnumValue(FieldElement field) {
+    final ConstantReader? annotation = _annotationNamed(field, 'JsonKey');
+    if (annotation == null) return null;
+    return _readString(annotation, 'unknownEnumValue');
   }
 
   // ---------------------------------------------------------------------------

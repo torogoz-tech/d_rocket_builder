@@ -36,4 +36,68 @@ void main() {
     expect(source, contains('dRest.decodeBody<PaginationResponse>(data)'));
     expect(source, isNot(contains("baseUrl: 'https://generated.example'")));
   });
+
+  test('serializes enum query, path and header parameters by name', () {
+    final String source = emitClient(
+      ParsedClient(
+        className: 'LocationClient',
+        baseUrl: 'https://generated.example',
+        classPath: '',
+        classHeaders: const <String, String>{},
+        classTimeout: null,
+        methods: <ParsedMethod>[
+          ParsedMethod(
+            name: 'find',
+            verb: 'GET',
+            path: '/locations/{status}',
+            methodHeaders: const <String, String>{},
+            returnType: ParsedReturnType(
+              dartType: 'dynamic',
+              isVoid: false,
+              isDynamic: true,
+              isList: false,
+              isMap: false,
+            ),
+            parameters: <ParsedParameter>[
+              ParsedParameter(
+                name: 'status',
+                annotationName: 'status',
+                kind: ParamKind.path,
+                dartType: 'LocationStatus',
+                isRequired: true,
+                isNullable: false,
+                isNamed: false,
+                isEnum: true,
+              ),
+              ParsedParameter(
+                name: 'filter',
+                annotationName: 'filter',
+                kind: ParamKind.query,
+                dartType: 'LocationStatus',
+                isRequired: true,
+                isNullable: false,
+                isNamed: false,
+                isEnum: true,
+              ),
+              ParsedParameter(
+                name: 'headerStatus',
+                annotationName: 'X-Location-Status',
+                kind: ParamKind.header,
+                dartType: 'LocationStatus',
+                isRequired: true,
+                isNullable: false,
+                isNamed: false,
+                isEnum: true,
+              ),
+            ],
+            timeout: null,
+          ),
+        ],
+      ),
+    );
+
+    expect(source, contains("'X-Location-Status': '\${headerStatus.name}'"));
+    expect(source, contains("'filter': filter.name"));
+    expect(source, contains("'status': status.name"));
+  });
 }

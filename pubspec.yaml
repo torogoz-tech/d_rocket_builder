@@ -1,6 +1,6 @@
 name: d_rocket_builder
 description: build_runner code generation for d_rocket serializers, REST clients, ORM metadata, migrations, realtime clients, and model-driven forms.
-version: 2.2.5
+version: 2.3.0
 
 repository: https://github.com/torogoz-tech/d_rocket_builder
 homepage: https://github.com/torogoz-tech/d_rocket_builder
@@ -25,8 +25,8 @@ platforms:
   windows:
 
 dependencies:
-  d_rocket: ^2.2.3
-  d_rocket_lints: ^2.2.2
+  d_rocket: ^2.3.0
+  d_rocket_lints: ^2.3.0
   # 2.2.3 — pinned Analyzer 13.0.0 in
   # lockstep with `d_rocket_lints` and
   # analysis_server_plugin 0.3.15.

@@ -96,7 +96,13 @@ void _emitMethod(
     buffer.writeln('    _headers.addAll(<String, String>{');
     for (final ParsedParameter p in headerParams) {
       final String key = p.annotationName ?? p.name;
-      buffer.writeln("      '${_escape(key)}': '\$${p.name}'.toString(),");
+      if (p.isEnum) {
+        buffer.writeln(
+          "      '${_escape(key)}': '\${${_enumValueExpression(p)}}',",
+        );
+      } else {
+        buffer.writeln("      '${_escape(key)}': '\$${p.name}'.toString(),");
+      }
     }
     buffer.writeln('    });');
   }
@@ -111,7 +117,9 @@ void _emitMethod(
         '    final Map<String, Object> _pathParams = <String, Object>{');
     for (final ParsedParameter p in pathParams) {
       final String key = p.annotationName ?? p.name;
-      buffer.writeln("      '$key': ${p.name} as Object,");
+      buffer.writeln(
+        "      '$key': ${p.isEnum ? _enumValueExpression(p) : '${p.name} as Object'},",
+      );
     }
     buffer.writeln('    };');
     pathParamsValue = '_pathParams';
@@ -126,7 +134,9 @@ void _emitMethod(
     buffer.writeln('    final Map<String, String> _query = <String, String>{');
     for (final ParsedParameter p in queryParams) {
       final String key = p.annotationName ?? p.name;
-      buffer.writeln("      '$key': ${p.name}.toString(),");
+      buffer.writeln(
+        "      '$key': ${p.isEnum ? _enumValueExpression(p) : '${p.name}.toString()'},",
+      );
     }
     buffer.writeln('    };');
     queryParamsValue = '_query';
@@ -195,6 +205,10 @@ void _emitMethod(
   buffer.writeln('  }');
   buffer.writeln();
 }
+
+String _enumValueExpression(ParsedParameter parameter) => parameter.isNullable
+    ? '${parameter.name}?.name.toString()'
+    : '${parameter.name}.name';
 
 String _methodReturnTypeString(ParsedMethod method) {
   if (method.returnType.isVoid) return 'Future<void>';

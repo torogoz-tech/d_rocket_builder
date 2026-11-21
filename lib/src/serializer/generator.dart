@@ -835,9 +835,22 @@ void register${meta.className}Serializer() {
         : "$enumType.values.byName('$unknownEnumValue')";
 
     if (useEnumIndex) {
+      if (nullable && unknownEnumValue == null) {
+        return "(() { final Object? _raw = $valueExpr; if (_raw == null) "
+            'return null; final int _i = (_raw as num).toInt(); '
+            'if (_i < 0 || _i >= $enumType.values.length) return null; '
+            'return $enumType.values[_i]; })()';
+      }
       final String parsed =
           "(() { final int _i = ($valueExpr as num).toInt(); if (_i < 0 || _i >= $enumType.values.length) return $unknownExpr; return $enumType.values[_i]; })()";
       return nullable ? "$valueExpr == null ? null : $parsed" : parsed;
+    }
+
+    if (nullable && unknownEnumValue == null) {
+      return "(() { final Object? _raw = $valueExpr; if (_raw == null) "
+          'return null; for (final $enumType _candidate in '
+          '$enumType.values) { if (_candidate.name == (_raw as String)) '
+          'return _candidate; } return null; })()';
     }
 
     final String parsed =
