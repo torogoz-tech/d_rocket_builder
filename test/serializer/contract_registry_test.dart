@@ -74,6 +74,30 @@ void main() {
         ));
   });
 
+  test('keeps nullable Object payloads opaque during decoding', () {
+    final ContractType opaqueObject = ContractType.named(
+      'Object',
+      libraryPath: 'dart:core',
+      isNullable: true,
+    );
+    final String output = ContractRegistryEmitter.emit(
+      <ContractType>[
+        ContractType.generic(
+          'ResponseModel',
+          <ContractType>[opaqueObject],
+          libraryPath: 'lib/response_model.dart',
+        ),
+      ],
+      importIndexes: <String, int>{'lib/response_model.dart': 0},
+    );
+
+    expect(
+      output,
+      contains('decode: (Object? value) => value,'),
+    );
+    expect(output, isNot(contains('Serializer.fromDynamic<Object?>(value)')));
+  });
+
   test('discovers generic return shapes from resolved client methods',
       () async {
     final Directory directory =

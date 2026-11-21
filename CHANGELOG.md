@@ -5,6 +5,19 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] — 2026-11-21
+
+### Fixed
+
+* Generic registry decoders now preserve opaque `Object?` payloads directly
+  instead of looking for a serializer registered for `Object?`. JSON objects,
+  lists, scalars, and `null` can be used as envelope data without a business
+  model or manual `Object?` registration.
+
+### Tests
+
+* Added regression coverage for opaque object decoding and JSON round-trips.
+
 ## [2.4.1] — 2026-11-21
 
 ### Fixed

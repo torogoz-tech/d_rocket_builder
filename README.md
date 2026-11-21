@@ -37,7 +37,7 @@ main dependencies — it never ships with the app):
 ```yaml
 dev_dependencies:
   d_rocket: ^2.4.0
-  d_rocket_builder: ^2.4.1
+  d_rocket_builder: ^2.4.2
   build_runner: ^2.4.13
 ```
 
@@ -71,7 +71,7 @@ dependencies:
   d_rocket_engine_sqlite: ^2.1.0
 
 dev_dependencies:
-  d_rocket_builder: ^2.4.1
+  d_rocket_builder: ^2.4.2
   build_runner: ^2.4.13
 ```
 
@@ -172,7 +172,7 @@ For a model `LoginRequest` annotated with `@Form`:
 The complete Forms contract is documented in
 [`doc/RELEASE_2.2.0.md`](doc/RELEASE_2.2.0.md). The observable field and
 `d_rocket_flutter` controller binding additions are documented in the
-[`d_rocket_builder 2.4.1 release guide`](https://github.com/torogoz-tech/d_rocket_builder/blob/main/doc/RELEASE_2.4.1.md).
+[`d_rocket_builder 2.4.2 release guide`](https://github.com/torogoz-tech/d_rocket_builder/blob/main/doc/RELEASE_2.4.2.md).
 
 ## Lint rules
 

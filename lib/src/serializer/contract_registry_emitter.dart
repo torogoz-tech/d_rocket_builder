@@ -36,6 +36,12 @@ class ContractRegistryEmitter {
     String expression,
     Map<String, int> importIndexes,
   ) {
+    if (type.className == 'Object' &&
+        type.libraryPath == 'dart:core' &&
+        type.typeArguments.isEmpty) {
+      if (type.isNullable) return expression;
+      return '$expression as ${_typeName(type, importIndexes)}';
+    }
     if (type.className == 'List' && type.typeArguments.length == 1) {
       final ContractType item = type.typeArguments.single;
       return '(($expression as List<dynamic>)'
