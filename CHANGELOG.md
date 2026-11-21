@@ -5,6 +5,22 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] — 2026-11-21
+
+### Fixed
+
+* Generic serializer registrations now resolve each type argument using the
+  library that declares it. Models declared outside the envelope no longer
+  receive the envelope's import alias, and `dart:core` types are emitted
+  without a consumer-library alias.
+* Generic registry registrations preserve nullable arguments such as
+  `Envelope<Object?>`.
+
+### Tests
+
+* Added a multi-file regression covering external models, nested lists,
+  `Object?`, generated registry compilation, and runtime initialization.
+
 ## [2.4.0] — 2026-11-21
 
 ### Added

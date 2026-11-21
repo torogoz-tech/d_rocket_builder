@@ -62,9 +62,12 @@ class ContractTypeCollector {
       found.add(
         ContractType.fromDartType(
           type,
-          libraryPathFor: (String name, DartType _) =>
-              genericLibraryPaths[name] ??
-              (_coreCollectionNames.contains(name) ? 'dart:core' : libraryPath),
+          libraryPathFor: (String name, DartType argument) => _libraryPathFor(
+            name,
+            argument,
+            genericLibraryPaths: genericLibraryPaths,
+            fallback: libraryPath,
+          ),
         ),
       );
     }
@@ -78,10 +81,27 @@ class ContractTypeCollector {
     }
   }
 
-  static const Set<String> _coreCollectionNames = <String>{
-    'Iterable',
-    'List',
-    'Map',
-    'Set',
-  };
+  static String _libraryPathFor(
+    String name,
+    DartType type, {
+    required Map<String, String> genericLibraryPaths,
+    required String fallback,
+  }) {
+    final String? knownPath = genericLibraryPaths[name];
+    if (knownPath != null) return knownPath;
+
+    if (type is! InterfaceType) return fallback;
+    final LibraryElement? library = type.element.library;
+    if (library == null) return fallback;
+
+    final Uri uri = library.uri;
+    if (uri.scheme == 'dart') return uri.toString();
+    if (uri.scheme == 'package' && uri.pathSegments.length > 1) {
+      return 'lib/${uri.pathSegments.skip(1).join('/')}';
+    }
+    if (uri.scheme == 'file') {
+      return library.firstFragment.libraryFragment?.source.fullName ?? fallback;
+    }
+    return fallback;
+  }
 }

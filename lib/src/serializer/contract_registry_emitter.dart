@@ -61,6 +61,6 @@ class ContractRegistryEmitter {
     final String arguments = type.typeArguments.isEmpty
         ? ''
         : '<${type.typeArguments.map((ContractType item) => _typeName(item, importIndexes)).join(', ')}>';
-    return '$prefix${type.className}$arguments';
+    return '$prefix${type.className}$arguments${type.isNullable ? '?' : ''}';
   }
 }
