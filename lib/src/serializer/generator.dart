@@ -590,7 +590,9 @@ void register${meta.className}Serializer() {
       }
       toExpr = _applyFormattersToJsonExpr(toExpr, typeStr, formats);
       fromExpr = _applyFormattersFromJsonExpr(fromExpr, typeStr, formats);
-      fromJsonParams.add('$fieldName: $fromExpr,');
+      fromJsonParams.add(
+        '$fieldName: ${_wrapDecode(className, fieldName, typeStr, jsonKey, fromExpr)},',
+      );
       _addToJsonEntries(
         toJsonEntries,
         genericToJsonEntries,
@@ -624,7 +626,9 @@ void register${meta.className}Serializer() {
         toExpr,
         fieldName,
       );
-      fromJsonParams.add('$fieldName: $fromExpr,');
+      fromJsonParams.add(
+        '$fieldName: ${_wrapDecode(className, fieldName, typeStr, jsonKey, fromExpr)},',
+      );
       return;
     }
 
@@ -781,7 +785,21 @@ void register${meta.className}Serializer() {
       toExpr,
       fieldName,
     );
-    fromJsonParams.add('$fieldName: $fromExpr,');
+    fromJsonParams.add(
+      '$fieldName: ${_wrapDecode(className, fieldName, typeStr, jsonKey, fromExpr)},',
+    );
+  }
+
+  String _wrapDecode(
+    String className,
+    String fieldName,
+    String typeStr,
+    String jsonKey,
+    String expression,
+  ) {
+    return 'Serializer.decodeField<$typeStr>('
+        "field: '$className.$fieldName', raw: json['$jsonKey'], "
+        'decode: () => $expression)';
   }
 
   void _addToJsonEntries(

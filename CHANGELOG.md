@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `UuidVersion.v1` through `UuidVersion.v8` restrictions.
 * Generated UUID validators preserve custom messages and stable validation
   codes and compile canonical UUID patterns with escaped Dart literals.
+* Generated form adapters now expose asynchronous model validators, debounce
+  configuration, validation-state APIs, `buildAsync()` and `applyRestError()`.
+* Generated serializer field conversions now use the runtime's detailed
+  `SerializationException` context.
 
 ## [2.4.2] — 2026-11-21
 

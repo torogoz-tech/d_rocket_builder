@@ -34,6 +34,9 @@ class FormSourceWriter {
       ..writeln(
           '    List<FormValidator<${metadata.className}>> validators = const <FormValidator<${metadata.className}>>[],')
       ..writeln(
+          '    List<AsyncFormValidator<${metadata.className}>> asyncValidators = const <AsyncFormValidator<${metadata.className}>>[],')
+      ..writeln('    Duration? asyncValidationDebounce,')
+      ..writeln(
           '    FormValidationMode validationMode = FormValidationMode.onSubmit,')
       ..writeln('  }) : state = _createState(');
 
@@ -50,6 +53,8 @@ class FormSourceWriter {
     }
     output
       ..writeln('    validators,')
+      ..writeln('    asyncValidators,')
+      ..writeln('    asyncValidationDebounce,')
       ..writeln('    validationMode,')
       ..writeln('  );')
       ..writeln()
@@ -89,7 +94,12 @@ class FormSourceWriter {
 
     output
       ..writeln('  bool validate() => state.validate();')
+      ..writeln('  Future<bool> validateAsync() => state.validateAsync();')
       ..writeln('  ${metadata.className} build() => state.build();')
+      ..writeln(
+          '  Future<${metadata.className}> buildAsync() => state.buildAsync();')
+      ..writeln(
+          '  void applyRestError(RestHttpException error) => state.applyRestError(error);')
       ..writeln()
       ..writeln('  void Function(TValue) bindComposite<TValue>(')
       ..writeln('    Map<String, Object?> Function(TValue value) mapper,')
@@ -111,6 +121,9 @@ class FormSourceWriter {
 
     output
       ..writeln('    List<FormValidator<${metadata.className}>> validators,')
+      ..writeln(
+          '    List<AsyncFormValidator<${metadata.className}>> asyncValidators,')
+      ..writeln('    Duration? asyncValidationDebounce,')
       ..writeln('    FormValidationMode validationMode,')
       ..writeln('  ) {')
       ..writeln('    final fields = <String, FormFieldState<Object?>>{');
@@ -145,6 +158,8 @@ class FormSourceWriter {
       ..writeln('    final form = FormState<${metadata.className}>(')
       ..writeln('      fields: fields,')
       ..writeln('      validators: validators,')
+      ..writeln('      asyncValidators: asyncValidators,')
+      ..writeln('      asyncValidationDebounce: asyncValidationDebounce,')
       ..writeln('      builder: () => ${metadata.className}(');
 
     for (final ({
