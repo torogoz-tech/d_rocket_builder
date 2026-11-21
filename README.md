@@ -1,6 +1,6 @@
 # d_rocket_builder
 
-> **Codegen for the [d_rocket 2.2](https://pub.dev/packages/d_rocket) framework.**
+> **Codegen for the [d_rocket 2.4](https://pub.dev/packages/d_rocket) framework.**
 
 <p align="center">
   <img src="assets/banner.png" alt="d_rocket_builder banner" width="100%">
@@ -36,8 +36,8 @@ main dependencies — it never ships with the app):
 
 ```yaml
 dev_dependencies:
-  d_rocket: ^2.2.3
-  d_rocket_builder: ^2.3.0
+  d_rocket: ^2.4.0
+  d_rocket_builder: ^2.4.0
   build_runner: ^2.4.13
 ```
 
@@ -67,11 +67,11 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
-  d_rocket: ^2.2.3
+  d_rocket: ^2.4.0
   d_rocket_engine_sqlite: ^2.1.0
 
 dev_dependencies:
-  d_rocket_builder: ^2.3.0
+  d_rocket_builder: ^2.4.0
   build_runner: ^2.4.13
 ```
 
@@ -128,6 +128,11 @@ including the nested list decoder. No manual registration is needed for those
 contract shapes; unconstrained generic classes are still left for explicit
 application registration.
 
+The generated registry qualifies imported types correctly. This is important
+when the generic response class and its concrete model are declared in
+different libraries; the emitted Dart uses the registry import aliases and
+compiles without manual edits.
+
 ## What gets generated
 
 For a class `Foo` annotated with `@Serializable()`:
@@ -164,8 +169,10 @@ For a model `LoginRequest` annotated with `@Form`:
 - Generated raw parsers for numeric, boolean, date and enum inputs.
 - Independent output from serializer, REST, ORM and realtime builders.
 
-The complete Forms contract and a Flutter login example are documented in
-[`doc/RELEASE_2.2.0.md`](doc/RELEASE_2.2.0.md).
+The complete Forms contract is documented in
+[`doc/RELEASE_2.2.0.md`](doc/RELEASE_2.2.0.md). The observable field and
+`d_rocket_flutter` controller binding additions are documented in the
+[`d_rocket 2.4.0 release guide`](https://github.com/torogoz-tech/d_rocket/blob/main/doc/RELEASE_2.4.0.md).
 
 ## Lint rules
 
@@ -183,9 +190,8 @@ but new code should depend on `d_rocket_lints` directly:
 Enable them in your `analysis_options.yaml`:
 
 ```yaml
-analyzer:
-  plugins:
-    - d_rocket_lints
+plugins:
+  d_rocket_lints: ^2.3.0
 ```
 
 ## CLI tools
