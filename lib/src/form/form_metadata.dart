@@ -50,6 +50,7 @@ class FormMetadata {
             'Length',
             'Pattern',
             'Range',
+            'Uuid',
           ])
             if (_annotation(field, name) case final ConstantReader value)
               (name: name, annotation: value),
@@ -80,6 +81,7 @@ class FormMetadata {
           'Email',
           'Length',
           'Pattern',
+          'Uuid',
         }.contains(validator.name);
         final bool numericValidator = validator.name == 'Range';
         if (stringValidator && baseType != 'String') {

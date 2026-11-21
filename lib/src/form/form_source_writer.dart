@@ -4,6 +4,7 @@ import 'package:d_rocket/d_rocket.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'form_metadata.dart';
+import 'uuid_pattern.dart';
 
 /// Writes the generated adapter that binds model fields to [FormState].
 class FormSourceWriter {
@@ -184,6 +185,9 @@ class FormSourceWriter {
       case 'Pattern':
         final String expression = _readString(annotation, 'expression', '.*');
         return "          (value) => value is String && !RegExp('$expression').hasMatch(value) ? FormError(code: '${_readString(annotation, 'code', 'pattern.invalid')}', message: '${_readString(annotation, 'message', 'El formato no es válido')}') : null,";
+      case 'Uuid':
+        final UuidVersion? version = _readUuidVersion(annotation);
+        return "          (value) => value is String && !RegExp('${uuidPattern(version)}').hasMatch(value) ? FormError(code: '${_readString(annotation, 'code', 'uuid.invalid')}', message: '${_readString(annotation, 'message', 'El UUID no es válido')}') : null,";
       case 'Range':
         final num? min = _readNullableNum(annotation, 'min');
         final num? max = _readNullableNum(annotation, 'max');
@@ -343,6 +347,19 @@ class FormSourceWriter {
   int? _readNullableInt(ConstantReader reader, String name) {
     final ConstantReader value = reader.read(name);
     return value.isInt ? value.intValue : null;
+  }
+
+  UuidVersion? _readUuidVersion(ConstantReader reader) {
+    final ConstantReader value = reader.read('version');
+    if (value.isNull) return null;
+    final String accessor = value.revive().accessor;
+    for (final UuidVersion candidate in UuidVersion.values) {
+      if (accessor == candidate.name ||
+          accessor.endsWith('.${candidate.name}')) {
+        return candidate;
+      }
+    }
+    return null;
   }
 
   num? _readNullableNum(ConstantReader reader, String name) {
