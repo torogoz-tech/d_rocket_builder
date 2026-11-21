@@ -25,4 +25,13 @@ void main() {
       isNot(contains(r'decode$typeParamName($expr as Map<String, dynamic>)')),
     );
   });
+
+  test('default collection literals preserve the declared field type', () {
+    final String source =
+        File('lib/src/serializer/generator.dart').readAsStringSync();
+
+    expect(source, contains('_readDefaultValueCode(jsonKeyAnnotation, type)'));
+    expect(source, contains('_literalToCode(value.literalValue, fieldType)'));
+    expect(source, contains('typeArguments.first'));
+  });
 }

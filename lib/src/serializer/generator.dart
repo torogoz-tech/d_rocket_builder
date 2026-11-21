@@ -245,7 +245,8 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
 
     final bool useEnumIndex =
         _readOptionalBool(jsonKeyAnnotation, 'useEnumIndex') ?? false;
-    final String? defaultValueCode = _readDefaultValueCode(jsonKeyAnnotation);
+    final String? defaultValueCode =
+        _readDefaultValueCode(jsonKeyAnnotation, type);
     final String? converter =
         _readOptionalString(jsonKeyAnnotation, 'converter');
     final bool requiredKey =
@@ -1219,13 +1220,16 @@ void register${meta.className}Serializer() {
     }
   }
 
-  String? _readDefaultValueCode(ConstantReader annotation) {
+  String? _readDefaultValueCode(
+    ConstantReader annotation,
+    DartType fieldType,
+  ) {
     final ConstantReader? value = annotation.peek('defaultValue');
     if (value == null || value.isNull) return null;
-    return _literalToCode(value.literalValue);
+    return _literalToCode(value.literalValue, fieldType);
   }
 
-  String _literalToCode(Object? value) {
+  String _literalToCode(Object? value, [DartType? expectedType]) {
     if (value == null) return 'null';
     if (value is String) {
       final String escaped = value
@@ -1236,22 +1240,40 @@ void register${meta.className}Serializer() {
     }
     if (value is bool || value is num) return value.toString();
     if (value is List) {
-      return '<dynamic>[${value.map(_literalToCode).join(', ')}]';
+      final DartType? elementType = _typeArgument(expectedType, 0);
+      return '<${_typeCode(elementType)}>[${value.map(
+            (Object? item) => _literalToCode(item, elementType),
+          ).join(', ')}]';
     }
     if (value is Set) {
-      return '<dynamic>{${value.map(_literalToCode).join(', ')}}';
+      final DartType? elementType = _typeArgument(expectedType, 0);
+      return '<${_typeCode(elementType)}>${value.map(
+            (Object? item) => _literalToCode(item, elementType),
+          ).join(', ')}}';
     }
     if (value is Map) {
+      final DartType? keyType = _typeArgument(expectedType, 0);
+      final DartType? valueType = _typeArgument(expectedType, 1);
       final String items = value.entries
           .map((MapEntry<dynamic, dynamic> entry) =>
-              '${_literalToCode(entry.key)}: ${_literalToCode(entry.value)}')
+              '${_literalToCode(entry.key, keyType)}: '
+              '${_literalToCode(entry.value, valueType)}')
           .join(', ');
-      return '<dynamic, dynamic>{$items}';
+      return '<${_typeCode(keyType)}, ${_typeCode(valueType)}>{$items}';
     }
     throw InvalidGenerationSourceError(
       'Unsupported defaultValue type: ${value.runtimeType}. Use literal values only.',
     );
   }
+
+  DartType? _typeArgument(DartType? type, int index) {
+    if (type is InterfaceType && index < type.typeArguments.length) {
+      return type.typeArguments[index];
+    }
+    return null;
+  }
+
+  String _typeCode(DartType? type) => type?.toString() ?? 'dynamic';
 }
 
 // ---------------------------------------------------------------------------
