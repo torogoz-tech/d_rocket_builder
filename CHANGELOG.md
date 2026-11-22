@@ -5,6 +5,22 @@ All notable changes to `d_rocket_builder` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — 2.6.0 program
+
+### Added
+
+* REST codegen now understands `@QueryCache` and `@Invalidates`, emits
+  instance-scoped query streams, normalized URL keys, placeholder tag values
+  and post-success invalidation.
+* `@Serializable(copyWith: true, equality: true)` now emits sentinel-based
+  `copyWith`, an equality mixin and a JSON Schema function.
+* Serializer fields can declare a `readValue` hook through `@JsonKey`.
+
+### Compatibility
+
+* Existing generated clients and serializers keep their previous output when
+  the new annotations and flags are absent.
+
 ## [2.5.0] — 2026-11-21
 
 ### Added
