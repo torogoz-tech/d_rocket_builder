@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] — 2.6.0 program
 
+* The 2.6.0 generated form contract is compatible with enabled/disabled
+  runtime controls and REST field-error binding.
+
 ### Added
 
 * REST codegen now understands `@QueryCache` and `@Invalidates`, emits
