@@ -1,7 +1,7 @@
 # d_rocket_builder 2.6.0 — implementation status
 
-The 2.6.0 work adds opt-in generated contracts while preserving the output of
-existing annotations.
+The local 2.6.0 candidate adds opt-in generated contracts while preserving the
+output of existing annotations.
 
 ## Implemented
 
