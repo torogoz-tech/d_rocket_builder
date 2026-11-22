@@ -30,8 +30,10 @@ String emitClient(ParsedClient client) {
   buffer.writeln('  _\$${client.className}({RestClientConfig? config})');
   buffer.writeln('      : _client = config?.build(dRest.client),');
   buffer.writeln(
-    "        _baseUrl = config?.baseUrl ?? ${_quoteString(client.baseUrl)};",
+    "        _baseUrl = config?.baseUrl ?? ${_quoteString(client.baseUrl)},",
   );
+  buffer.writeln('        _queryCache = config?.queryCache ?? dRest.queryCache;');
+  buffer.writeln('  final RestQueryCache _queryCache;');
   buffer.writeln('  final HttpClient? _client;');
   buffer.writeln('  final String _baseUrl;');
   buffer.writeln();
@@ -198,7 +200,7 @@ void _emitMethod(
 
   if (method.returnType.isStream && method.queryCacheTags.isNotEmpty) {
     final String inner = method.returnType.innerType ?? 'dynamic';
-    buffer.writeln('    return dRest.queryCache.watch<$inner>(');
+    buffer.writeln('    return _queryCache.watch<$inner>(');
     buffer.writeln("      key: '\${_request.method} \${_request.fullUrl}',");
     buffer.writeln('      tags: <String>[');
     for (final String tag in method.queryCacheTags) {
@@ -296,7 +298,7 @@ String _methodReturnTypeString(ParsedMethod method) {
 
 void _emitInvalidation(StringBuffer buffer, ParsedMethod method) {
   if (method.invalidationTags.isEmpty) return;
-  buffer.writeln('    await dRest.queryCache.invalidate(<String>[');
+  buffer.writeln('    await _queryCache.invalidate(<String>[');
   for (final String tag in method.invalidationTags) {
     buffer.writeln('      resolveRestQueryTemplate(');
     buffer.writeln("        '${_escape(tag)}',");
