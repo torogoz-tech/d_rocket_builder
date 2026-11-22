@@ -20,6 +20,6 @@ generated cache and reader contracts.
 
 ## Remaining 2.6.0 work
 
-OpenAPI import/export, complete pagination metadata and a published-package
-compatibility matrix remain tracked work. They are not represented as shipped
-features until their generated output has compilation and runtime fixtures.
+Complete pagination metadata and a published-package compatibility matrix
+remain tracked work. OpenAPI currently imports/exports endpoint metadata and
+does not yet generate complete Dart clients from arbitrary schemas.
