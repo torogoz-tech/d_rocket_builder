@@ -97,6 +97,10 @@ import 'src/form/form_generator.dart';
 // should depend on `d_rocket_lints`
 // directly (it's a `dev_dependency`).
 export 'package:d_rocket_lints/d_rocket_lints.dart';
+export 'src/rest/openapi_document.dart';
+export 'src/rest/openapi_exporter.dart';
+export 'src/rest/openapi_endpoint.dart';
+export 'src/rest/openapi_importer.dart';
 
 /// Builder factory for `d_rocket_builder:record`.
 ///

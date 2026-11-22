@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Serializer fields can declare a `readValue` hook through `@JsonKey`.
 * Added a release-status document describing generated 2.6.0 contracts and
   their verification boundaries.
+* Added OpenAPI 3.1 export and endpoint metadata import for parsed REST
+  clients, including parameters, JSON bodies and component schemas.
 
 ### Compatibility
 
