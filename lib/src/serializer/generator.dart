@@ -59,7 +59,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
 
     final _GenerationPlan plan = _buildPlan(meta, fields, extraField);
 
-    return _renderSource(meta, plan, element);
+    return _renderSource(meta, plan, element, fields);
   }
 
   // ---------------------------------------------------------------------------
@@ -79,6 +79,8 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
     final UnknownKeyPolicy unknownKeyPolicy =
         _readUnknownKeyPolicy(annotation, strictBool);
     final JsonNaming naming = _readNaming(annotation);
+    final bool copyWith = _readOptionalBool(annotation, 'copyWith') ?? false;
+    final bool equality = _readOptionalBool(annotation, 'equality') ?? false;
 
     // Generics: capture the type parameters declared on the class.
     // We store the display string of each parameter (e.g. `T`, `T?`,
@@ -105,6 +107,8 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
       naming: naming,
       resolvedDiscriminator: discriminator ?? rename ?? element.displayName,
       typeParameters: typeParameters,
+      copyWith: copyWith,
+      equality: equality,
     );
   }
 
@@ -397,6 +401,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
     _ClassMetadata meta,
     _GenerationPlan plan,
     ClassElement element,
+    List<FieldElement> fields,
   ) {
     final String toJsonBody =
         'return <String, dynamic>{\n${plan.toJsonEntries.join('\n')}\n};';
@@ -450,6 +455,8 @@ extension ${meta.className}Serializer on ${meta.className} {
   }
 }''';
 
+    final String valueHelpers = _renderValueHelpers(meta, fields);
+
     return '''
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: non_constant_identifier_names
@@ -463,7 +470,79 @@ Map<String, dynamic> ${meta.className}ToJson$typeArgs(${meta.className}$typeArgs
 }
 $unionRegistration
 $toJsonExtension
+$valueHelpers
 ''';
+  }
+
+  String _renderValueHelpers(
+    _ClassMetadata meta,
+    List<FieldElement> fields,
+  ) {
+    if (!meta.copyWith && !meta.equality) return '';
+    final String typeParameters =
+        meta.isGeneric ? '<${meta.typeParameters.join(', ')}>' : '';
+    final String classType = '${meta.className}$typeParameters';
+    final String sentinelName = '_\$${meta.className}CopyWithSentinel';
+    final StringBuffer buffer = StringBuffer();
+
+    if (meta.copyWith) {
+      buffer.writeln('');
+      buffer.writeln('const Object $sentinelName = Object();');
+      buffer.writeln('');
+      buffer.writeln(
+        'extension ${meta.className}CopyWith$typeParameters on $classType {',
+      );
+      buffer.writeln('  $classType copyWith({');
+      for (final FieldElement field in fields) {
+        buffer.writeln('    Object? ${field.displayName} = $sentinelName,');
+      }
+      buffer.writeln('  }) {');
+      buffer.writeln('    return $classType(');
+      for (final FieldElement field in fields) {
+        final String name = field.displayName;
+        final String type = field.type.getDisplayString();
+        buffer.writeln(
+          '      $name: identical($name, $sentinelName) '
+          '? this.$name : $name as $type,',
+        );
+      }
+      buffer.writeln('    );');
+      buffer.writeln('  }');
+      buffer.writeln('}');
+    }
+
+    if (meta.equality) {
+      buffer.writeln('');
+      buffer.writeln(
+        'mixin _\$${meta.className}Equality$typeParameters {',
+      );
+      buffer.writeln('  @override');
+      buffer.writeln('  bool operator ==(Object other) {');
+      buffer.writeln('    final $classType self = this as $classType;');
+      buffer.writeln('    return identical(this, other) ||');
+      buffer.writeln('        other is $classType &&');
+      if (fields.isEmpty) {
+        buffer.writeln('        true;');
+      } else {
+        for (var index = 0; index < fields.length; index++) {
+          final String name = fields[index].displayName;
+          final String suffix = index == fields.length - 1 ? ';' : ' &&';
+          buffer.writeln(
+            '        ValueEquality.equals(self.$name, (other as $classType).$name)$suffix',
+          );
+        }
+      }
+      buffer.writeln('  }');
+      buffer.writeln('');
+      buffer.writeln('  @override');
+      buffer.writeln('  int get hashCode => Object.hashAll(<Object?>[');
+      for (final FieldElement field in fields) {
+        buffer.writeln('    ValueEquality.hash((this as $classType).${field.displayName}),');
+      }
+      buffer.writeln('  ]);');
+      buffer.writeln('}');
+    }
+    return buffer.toString();
   }
 
   String _renderRegisterFunction(
@@ -1321,6 +1400,8 @@ class _ClassMetadata {
     required this.naming,
     required this.resolvedDiscriminator,
     required this.typeParameters,
+    required this.copyWith,
+    required this.equality,
   });
 
   final String className;
@@ -1335,6 +1416,8 @@ class _ClassMetadata {
   /// `['T']` for `class ApiResponse[T]`). Empty for non-generic
   /// classes.
   final List<String> typeParameters;
+  final bool copyWith;
+  final bool equality;
 
   /// Convenience predicate for the common `if (isGeneric)` checks
   /// throughout the renderer.
