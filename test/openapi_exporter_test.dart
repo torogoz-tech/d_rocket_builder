@@ -68,6 +68,14 @@ void main() {
           ),
         ],
       ),
+      schemas: <String, Map<String, Object?>>{
+        'Item': <String, Object?>{
+          'type': 'object',
+          'properties': <String, Object?>{
+            'name': <String, Object?>{'type': 'string'},
+          },
+        },
+      },
     );
     final Map<String, Object?> json = document.toJson();
     final Map<String, Object?> paths = json['paths']! as Map<String, Object?>;
@@ -80,7 +88,15 @@ void main() {
     expect(json['servers'], isNotEmpty);
     expect(
       (json['components']! as Map<String, Object?>)['schemas'],
-      containsPair('Item', <String, Object?>{'type': 'object'}),
+      containsPair(
+        'Item',
+        <String, Object?>{
+          'type': 'object',
+          'properties': <String, Object?>{
+            'name': <String, Object?>{'type': 'string'},
+          },
+        },
+      ),
     );
     final Map<String, Object?> upload = (paths['/v1/files']!
         as Map<String, Object?>)['post']! as Map<String, Object?>;

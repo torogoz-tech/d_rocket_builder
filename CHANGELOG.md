@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `@JsonConverterBinding`.
 * REST codegen now emits multipart bodies for `@Part` parameters.
 * OpenAPI export now describes multipart and form-urlencoded request bodies.
+* OpenAPI export accepts complete model schemas supplied by serializer
+  metadata, preserving properties and required fields.
 
 ### Compatibility
 

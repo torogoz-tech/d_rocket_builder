@@ -5,11 +5,17 @@ import 'parser.dart';
 class OpenApiExporter {
   const OpenApiExporter();
 
-  OpenApiDocument export(ParsedClient client) {
+  OpenApiDocument export(
+    ParsedClient client, {
+    Map<String, Map<String, Object?>> schemas =
+        const <String, Map<String, Object?>>{},
+  }) {
     final Map<String, Object?> paths = <String, Object?>{};
-    final Map<String, Object?> schemas = <String, Object?>{};
+    final Map<String, Object?> registeredSchemas = <String, Object?>{
+      ...schemas
+    };
     for (final ParsedMethod method in client.methods) {
-      _registerSchema(schemas, method.returnType.dartType);
+      _registerSchema(registeredSchemas, method.returnType.dartType);
       final Map<String, Object?> operation = <String, Object?>{
         'operationId': method.name,
         'responses': <String, Object?>{
@@ -41,7 +47,7 @@ class OpenApiExporter {
           .firstWhere((ParsedParameter? parameter) => parameter != null,
               orElse: () => null);
       if (body != null) {
-        _registerSchema(schemas, body.dartType);
+        _registerSchema(registeredSchemas, body.dartType);
         operation['requestBody'] = <String, Object?>{
           'required': body.isRequired && !body.isNullable,
           'content': <String, Object?>{
@@ -104,7 +110,7 @@ class OpenApiExporter {
         <String, Object?>{'url': client.baseUrl},
       ],
       'paths': paths,
-      'components': <String, Object?>{'schemas': schemas},
+      'components': <String, Object?>{'schemas': registeredSchemas},
     });
   }
 }
