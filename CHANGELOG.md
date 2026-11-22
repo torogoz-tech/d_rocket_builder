@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `@Serializable(copyWith: true, equality: true)` now emits sentinel-based
   `copyWith`, an equality mixin and a JSON Schema function.
 * Serializer fields can declare a `readValue` hook through `@JsonKey`.
+* Added a release-status document describing generated 2.6.0 contracts and
+  their verification boundaries.
 
 ### Compatibility
 
