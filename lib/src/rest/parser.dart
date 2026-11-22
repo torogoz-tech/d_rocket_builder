@@ -37,6 +37,10 @@ class ParsedMethod {
   final ParsedReturnType returnType;
   final List<ParsedParameter> parameters;
   final Duration? timeout;
+  final List<String> queryCacheTags;
+  final Duration? queryCacheStaleTime;
+  final Duration? queryCacheTime;
+  final List<String> invalidationTags;
 
   ParsedMethod({
     required this.name,
@@ -46,6 +50,10 @@ class ParsedMethod {
     required this.returnType,
     required this.parameters,
     required this.timeout,
+    this.queryCacheTags = const <String>[],
+    this.queryCacheStaleTime,
+    this.queryCacheTime,
+    this.invalidationTags = const <String>[],
   });
 }
 
@@ -82,6 +90,7 @@ class ParsedReturnType {
   final String? innerType;
   final String? mapKeyType;
   final String? mapValueType;
+  final bool isStream;
 
   ParsedReturnType({
     required this.dartType,
@@ -92,6 +101,7 @@ class ParsedReturnType {
     this.innerType,
     this.mapKeyType,
     this.mapValueType,
+    this.isStream = false,
   });
 }
 
@@ -252,6 +262,29 @@ class ClientParser {
     final DartType returnType = method.returnType;
     final ParsedReturnType parsedReturn = _unwrapFuture(returnType);
 
+    final DartObject? queryCache = _findAnnotationByName(method, 'QueryCache');
+    final DartObject? invalidates = _findAnnotationByName(method, 'Invalidates');
+    final List<String> queryCacheTags =
+        _readStringList(queryCache, 'tags');
+    final Duration? queryCacheStaleTime =
+        _readDuration(queryCache, 'staleTime');
+    final Duration? queryCacheTime =
+        _readDuration(queryCache, 'cacheTime');
+    final List<String> invalidationTags =
+        _readStringList(invalidates, 'tags');
+    if (queryCache != null && !parsedReturn.isStream) {
+      throw InvalidGenerationSourceError(
+        '@QueryCache can only be applied to a Stream<T> REST method.',
+        element: method,
+      );
+    }
+    if (parsedReturn.isStream && queryCache == null) {
+      throw InvalidGenerationSourceError(
+        'REST Stream<T> methods require @QueryCache.',
+        element: method,
+      );
+    }
+
     final List<ParsedParameter> params = <ParsedParameter>[];
     for (final FormalParameterElement p in method.formalParameters) {
       params.add(_parseParameter(p));
@@ -265,6 +298,10 @@ class ClientParser {
       returnType: parsedReturn,
       parameters: params,
       timeout: null,
+      queryCacheTags: queryCacheTags,
+      queryCacheStaleTime: queryCacheStaleTime,
+      queryCacheTime: queryCacheTime,
+      invalidationTags: invalidationTags,
     );
   }
 
@@ -382,6 +419,20 @@ class ClientParser {
           mapValueType: v,
         );
       }
+      if (name == 'Stream') {
+        final String? inner = type.typeArguments.isNotEmpty
+            ? type.typeArguments.first.getDisplayString()
+            : null;
+        return ParsedReturnType(
+          dartType: display,
+          isVoid: false,
+          isDynamic: false,
+          isList: false,
+          isMap: false,
+          innerType: inner,
+          isStream: true,
+        );
+      }
     }
     return ParsedReturnType(
       dartType: display,
@@ -435,7 +486,8 @@ class ClientParser {
     return result;
   }
 
-  static Duration? _readDuration(DartObject obj, String field) {
+  static Duration? _readDuration(DartObject? obj, String field) {
+    if (obj == null || obj.isNull) return null;
     final DartObject? value = obj.getField(field);
     if (value == null || value.isNull) return null;
     final DartObject? micros = value.getField('_microseconds');
@@ -443,5 +495,15 @@ class ClientParser {
     final int? i = micros.toIntValue();
     if (i == null) return null;
     return Duration(microseconds: i);
+  }
+
+  static List<String> _readStringList(DartObject? obj, String field) {
+    if (obj == null || obj.isNull) return const <String>[];
+    final DartObject? list = obj.getField(field);
+    final List<DartObject?>? raw = list?.toListValue();
+    if (raw == null) return const <String>[];
+    return raw.map((DartObject? item) => item?.toStringValue())
+        .whereType<String>()
+        .toList();
   }
 }

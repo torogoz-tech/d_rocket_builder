@@ -100,4 +100,80 @@ void main() {
     expect(source, contains("'filter': filter.name"));
     expect(source, contains("'status': status.name"));
   });
+
+  test('emits reactive query cache and successful mutation invalidation', () {
+    final String source = emitClient(
+      ParsedClient(
+        className: 'BankingClient',
+        baseUrl: 'https://generated.example',
+        classPath: '',
+        classHeaders: const <String, String>{},
+        classTimeout: null,
+        methods: <ParsedMethod>[
+          ParsedMethod(
+            name: 'watchAccount',
+            verb: 'GET',
+            path: '/accounts/{id}',
+            methodHeaders: const <String, String>{},
+            returnType: ParsedReturnType(
+              dartType: 'Stream<Account>',
+              isVoid: false,
+              isDynamic: false,
+              isList: false,
+              isMap: false,
+              isStream: true,
+              innerType: 'Account',
+            ),
+            parameters: <ParsedParameter>[
+              ParsedParameter(
+                name: 'id',
+                annotationName: 'id',
+                kind: ParamKind.path,
+                dartType: 'String',
+                isRequired: true,
+                isNullable: false,
+                isNamed: false,
+              ),
+            ],
+            timeout: null,
+            queryCacheTags: const <String>['account:{id}'],
+            queryCacheStaleTime: const Duration(seconds: 30),
+            queryCacheTime: const Duration(minutes: 5),
+          ),
+          ParsedMethod(
+            name: 'transfer',
+            verb: 'POST',
+            path: '/transfers',
+            methodHeaders: const <String, String>{},
+            returnType: ParsedReturnType(
+              dartType: 'TransferReceipt',
+              isVoid: false,
+              isDynamic: false,
+              isList: false,
+              isMap: false,
+            ),
+            parameters: <ParsedParameter>[
+              ParsedParameter(
+                name: 'request',
+                annotationName: null,
+                kind: ParamKind.body,
+                dartType: 'TransferRequest',
+                isRequired: true,
+                isNullable: false,
+                isNamed: false,
+              ),
+            ],
+            timeout: null,
+            invalidationTags: const <String>['account:{request.sourceId}'],
+          ),
+        ],
+      ),
+    );
+
+    expect(source, contains('Stream<Account> watchAccount'));
+    expect(source, contains('dRest.queryCache.watch<Account>'));
+    expect(source, contains("'account:{id}'"));
+    expect(source, contains('dRest.queryCache.invalidate'));
+    expect(source, contains("'request.sourceId': request.sourceId"));
+  });
 }

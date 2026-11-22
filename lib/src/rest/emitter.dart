@@ -75,7 +75,8 @@ void _emitMethod(
 
   buffer.writeln('  @override');
   buffer.writeln(
-    '  $returnTypeStr ${method.name}(${_parameterList(method)}) async {',
+    '  $returnTypeStr ${method.name}(${_parameterList(method)})'
+        '${method.returnType.isStream ? '' : ' async'} {',
   );
 
   // Build headers literal
@@ -177,29 +178,69 @@ void _emitMethod(
   }
   buffer.writeln('    );');
 
-  // Return statement
-  if (method.returnType.isVoid) {
+  if (method.returnType.isStream && method.queryCacheTags.isNotEmpty) {
+    final String inner = method.returnType.innerType ?? 'dynamic';
+    buffer.writeln('    return dRest.queryCache.watch<$inner>(');
+    buffer.writeln("      key: '\${_request.method} \${_request.fullUrl}',");
+    buffer.writeln('      tags: <String>[');
+    for (final String tag in method.queryCacheTags) {
+      buffer.writeln('        resolveRestQueryTemplate(');
+      buffer.writeln("          '${_escape(tag)}',");
+      buffer.writeln('          <String, Object?>{');
+      _emitTagValues(buffer, method, tag);
+      buffer.writeln('          },');
+      buffer.writeln('        ),');
+    }
+    buffer.writeln('      ],');
+    buffer.writeln(
+        '      staleTime: ${_durationLiteral(method.queryCacheStaleTime ?? const Duration(seconds: 30))},');
+    buffer.writeln(
+        '      cacheTime: ${_durationLiteral(method.queryCacheTime ?? const Duration(minutes: 5))},');
+    buffer.writeln('      loader: () => invokeRequest<$inner>(');
+    buffer.writeln('        _request,');
+    buffer.writeln('        (dynamic data) => dRest.decodeBody<$inner>(data),');
+    buffer.writeln('        client: _client,');
+    buffer.writeln('      ),');
+    buffer.writeln('    );');
+  } else if (method.returnType.isVoid) {
     buffer.writeln('    await invokeRequest<void>(');
     buffer.writeln('      _request,');
     buffer.writeln('      (dynamic data) => null,');
     buffer.writeln('      client: _client,');
     buffer.writeln('    );');
+    _emitInvalidation(buffer, method);
   } else if (method.returnType.isDynamic) {
-    buffer.writeln('    return invokeRequest<dynamic>(');
+    if (method.invalidationTags.isNotEmpty) {
+      buffer.writeln('    final dynamic _result = await invokeRequest<dynamic>(');
+    } else {
+      buffer.writeln('    return invokeRequest<dynamic>(');
+    }
     buffer.writeln('      _request,');
     buffer.writeln('      (dynamic data) => data,');
     buffer.writeln('      client: _client,');
     buffer.writeln('    );');
+    if (method.invalidationTags.isNotEmpty) {
+      _emitInvalidation(buffer, method);
+      buffer.writeln('    return _result;');
+    }
   } else {
     final String t = method.returnType.dartType;
     final String decoderType =
         t.endsWith('?') ? t.substring(0, t.length - 1) : t;
-    buffer.writeln('    return invokeRequest<$t>(');
+    if (method.invalidationTags.isNotEmpty) {
+      buffer.writeln('    final $t _result = await invokeRequest<$t>(');
+    } else {
+      buffer.writeln('    return invokeRequest<$t>(');
+    }
     buffer.writeln('      _request,');
     buffer.writeln(
         '      (dynamic data) => dRest.decodeBody<$decoderType>(data),');
     buffer.writeln('      client: _client,');
     buffer.writeln('    );');
+    if (method.invalidationTags.isNotEmpty) {
+      _emitInvalidation(buffer, method);
+      buffer.writeln('    return _result;');
+    }
   }
 
   buffer.writeln('  }');
@@ -212,6 +253,9 @@ String _enumValueExpression(ParsedParameter parameter) => parameter.isNullable
 
 String _methodReturnTypeString(ParsedMethod method) {
   if (method.returnType.isVoid) return 'Future<void>';
+  if (method.returnType.isStream) {
+    return 'Stream<${method.returnType.innerType ?? 'dynamic'}>';
+  }
   if (method.returnType.isList) {
     final String inner = method.returnType.innerType ?? 'dynamic';
     return 'Future<List<$inner>>';
@@ -220,6 +264,44 @@ String _methodReturnTypeString(ParsedMethod method) {
     return 'Future<${method.returnType.dartType}>';
   }
   return 'Future<${method.returnType.dartType}>';
+}
+
+void _emitInvalidation(StringBuffer buffer, ParsedMethod method) {
+  if (method.invalidationTags.isEmpty) return;
+  buffer.writeln('    await dRest.queryCache.invalidate(<String>[');
+  for (final String tag in method.invalidationTags) {
+    buffer.writeln('      resolveRestQueryTemplate(');
+    buffer.writeln("        '${_escape(tag)}',");
+    buffer.writeln('        <String, Object?>{');
+    _emitTagValues(buffer, method, tag);
+    buffer.writeln('        },');
+    buffer.writeln('      ),');
+  }
+  buffer.writeln('    ]);');
+}
+
+void _emitTagValues(
+  StringBuffer buffer,
+  ParsedMethod method,
+  String tag,
+) {
+  final RegExp tokenPattern = RegExp(r'\{([a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)?)\}');
+  final Set<String> tokens = tokenPattern
+      .allMatches(tag)
+      .map((RegExpMatch match) => match.group(1)!)
+      .toSet();
+  for (final String token in tokens) {
+    final String root = token.split('.').first;
+    final ParsedParameter? parameter = method.parameters
+        .where((ParsedParameter p) => p.name == root)
+        .cast<ParsedParameter?>()
+        .firstWhere((ParsedParameter? p) => p != null, orElse: () => null);
+    if (parameter == null) continue;
+    final String expression = token.contains('.')
+        ? '${parameter.name}.${token.substring(root.length + 1)}'
+        : parameter.name;
+    buffer.writeln("            '$token': $expression,");
+  }
 }
 
 String _parameterList(ParsedMethod method) {
