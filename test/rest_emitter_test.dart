@@ -171,9 +171,9 @@ void main() {
     );
 
     expect(source, contains('Stream<Account> watchAccount'));
-    expect(source, contains('dRest.queryCache.watch<Account>'));
+    expect(source, contains('_queryCache.watch<Account>'));
     expect(source, contains("'account:{id}'"));
-    expect(source, contains('dRest.queryCache.invalidate'));
+    expect(source, contains('_queryCache.invalidate'));
     expect(source, contains("'request.sourceId': request.sourceId"));
   });
 
