@@ -460,6 +460,7 @@ extension ${meta.className}Serializer on ${meta.className} {
 }''';
 
     final String valueHelpers = _renderValueHelpers(meta, fields);
+    final String schema = _renderJsonSchema(meta, fields);
 
     return '''
 // GENERATED CODE - DO NOT MODIFY BY HAND
@@ -475,7 +476,54 @@ Map<String, dynamic> ${meta.className}ToJson$typeArgs(${meta.className}$typeArgs
 $unionRegistration
 $toJsonExtension
 $valueHelpers
+$schema
 ''';
+  }
+
+  String _renderJsonSchema(_ClassMetadata meta, List<FieldElement> fields) {
+    final StringBuffer buffer = StringBuffer();
+    buffer.writeln('');
+    buffer.writeln('Map<String, Object?> ${meta.className}JsonSchema() {');
+    buffer.writeln('  return <String, Object?>{');
+    buffer.writeln("    '\\\$schema': 'https://json-schema.org/draft/2020-12/schema',");
+    buffer.writeln("    'title': '${meta.className}',");
+    buffer.writeln("    'type': 'object',");
+    buffer.writeln("    'properties': <String, Object?>{");
+    for (final FieldElement field in fields) {
+      final String key = jsonKeyFor(
+        field.displayName,
+        _namingAsString(meta.naming),
+      );
+      final String type = _schemaType(field.type);
+      final String format = field.type.element?.name == 'DateTime'
+          ? ", 'format': 'date-time'"
+          : '';
+      buffer.writeln(
+        "      '$key': <String, Object?>{'type': '$type'$format},",
+      );
+    }
+    buffer.writeln('    },');
+    final List<String> required = fields
+        .where((FieldElement field) => field.type.nullabilitySuffix.name == 'none')
+        .map((FieldElement field) => "'${jsonKeyFor(field.displayName, _namingAsString(meta.naming))}'")
+        .toList();
+    buffer.writeln("    'required': <String>[${required.join(', ')}],");
+    buffer.writeln('  };');
+    buffer.writeln('}');
+    return buffer.toString();
+  }
+
+  String _schemaType(DartType type) {
+    final String? name = type.element?.name;
+    if (type.isDartCoreString || name == 'DateTime' || name == 'Uri') {
+      return 'string';
+    }
+    if (type.isDartCoreBool) return 'boolean';
+    if (type.isDartCoreInt) return 'integer';
+    if (type.isDartCoreDouble || type.isDartCoreNum) return 'number';
+    if (type.isDartCoreList || type.isDartCoreSet) return 'array';
+    if (type.isDartCoreMap) return 'object';
+    return 'object';
   }
 
   String _renderValueHelpers(
