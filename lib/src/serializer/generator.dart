@@ -230,6 +230,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
         null,
         null,
         null,
+        null,
         formats,
         typeParameterNames,
       );
@@ -253,6 +254,8 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
         _readDefaultValueCode(jsonKeyAnnotation, type);
     final String? converter =
         _readOptionalString(jsonKeyAnnotation, 'converter');
+    final String? readValue =
+        _readOptionalString(jsonKeyAnnotation, 'readValue');
     final bool requiredKey =
         _readOptionalBool(jsonKeyAnnotation, 'requiredKey') ?? false;
     final String? unknownEnumValue =
@@ -280,6 +283,7 @@ class SerializableGenerator extends GeneratorForAnnotation<Serializable> {
       useEnumIndex,
       defaultValueCode,
       converter,
+      readValue,
       unknownEnumValue,
       formats,
       typeParameterNames,
@@ -626,6 +630,7 @@ void register${meta.className}Serializer() {
     bool useEnumIndex,
     String? defaultValueCode,
     String? converter,
+    String? readValue,
     String? unknownEnumValue,
     List<_FormatSpec> formats,
     Set<String> typeParameterNames,
@@ -669,6 +674,7 @@ void register${meta.className}Serializer() {
       }
       toExpr = _applyFormattersToJsonExpr(toExpr, typeStr, formats);
       fromExpr = _applyFormattersFromJsonExpr(fromExpr, typeStr, formats);
+      fromExpr = _replaceReadValue(fromExpr, jsonKey, readValue);
       fromJsonParams.add(
         '$fieldName: ${_wrapDecode(className, fieldName, typeStr, jsonKey, fromExpr)},',
       );
@@ -698,6 +704,7 @@ void register${meta.className}Serializer() {
       if (defaultValueCode != null) {
         fromExpr = "json['$jsonKey'] == null ? $defaultValueCode : $fromExpr";
       }
+      fromExpr = _replaceReadValue(fromExpr, jsonKey, readValue);
       _addToJsonEntries(
         toJsonEntries,
         genericToJsonEntries,
@@ -856,6 +863,7 @@ void register${meta.className}Serializer() {
 
     toExpr = _applyFormattersToJsonExpr(toExpr, typeStr, formats);
     fromExpr = _applyFormattersFromJsonExpr(fromExpr, typeStr, formats);
+    fromExpr = _replaceReadValue(fromExpr, jsonKey, readValue);
 
     _addToJsonEntries(
       toJsonEntries,
@@ -879,6 +887,15 @@ void register${meta.className}Serializer() {
     return 'Serializer.decodeField<$typeStr>('
         "field: '$className.$fieldName', raw: json['$jsonKey'], "
         'decode: () => $expression)';
+  }
+
+  String _replaceReadValue(
+    String expression,
+    String jsonKey,
+    String? readValue,
+  ) {
+    if (readValue == null || readValue.isEmpty) return expression;
+    return expression.replaceAll("json['$jsonKey']", '$readValue(json)');
   }
 
   void _addToJsonEntries(
