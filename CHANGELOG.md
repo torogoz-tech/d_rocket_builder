@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * REST codegen now recognizes `RestPage<T>` and emits typed item decoding.
 * Serializer codegen now emits registrations declared with
   `@JsonConverterBinding`.
+* REST codegen now emits multipart bodies for `@Part` parameters.
 
 ### Compatibility
 

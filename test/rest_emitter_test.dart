@@ -210,4 +210,49 @@ void main() {
     expect(source, contains('RestPage<Item>.fromJson'));
     expect(source, contains('dRest.decodeBody<Item>(item)'));
   });
+
+  test('emits multipart body for Part parameters', () {
+    final String source = emitClient(
+      ParsedClient(
+        className: 'UploadClient',
+        baseUrl: 'https://generated.example',
+        classPath: '',
+        classHeaders: const <String, String>{},
+        classTimeout: null,
+        methods: <ParsedMethod>[
+          ParsedMethod(
+            name: 'upload',
+            verb: 'POST',
+            path: '/files',
+            methodHeaders: const <String, String>{},
+            returnType: ParsedReturnType(
+              dartType: 'dynamic',
+              isVoid: false,
+              isDynamic: true,
+              isList: false,
+              isMap: false,
+            ),
+            parameters: <ParsedParameter>[
+              ParsedParameter(
+                name: 'file',
+                annotationName: 'file',
+                kind: ParamKind.part,
+                dartType: 'List<int>',
+                isRequired: true,
+                isNullable: false,
+                isNamed: false,
+              ),
+            ],
+            timeout: null,
+          ),
+        ],
+      ),
+    );
+
+    expect(source, contains('RestMultipartBody _multipart'));
+    expect(source, contains('RestMultipartPart.fromValue'));
+    expect(
+        source, contains("_headers['Content-Type'] = _multipart.contentType"));
+    expect(source, contains('body: _multipart.toBytes()'));
+  });
 }

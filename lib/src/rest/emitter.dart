@@ -158,13 +158,31 @@ void _emitMethod(
     }
   }
 
+  final List<ParsedParameter> partParams = method.parameters
+      .where((ParsedParameter p) => p.kind == ParamKind.part)
+      .toList();
+  if (partParams.isNotEmpty) {
+    buffer
+        .writeln('    final RestMultipartBody _multipart = RestMultipartBody(');
+    buffer.writeln('      parts: <RestMultipartPart>[');
+    for (final ParsedParameter p in partParams) {
+      final String key = p.annotationName ?? p.name;
+      buffer.writeln(
+          "        RestMultipartPart.fromValue('${_escape(key)}', ${p.name}),");
+    }
+    buffer.writeln('      ],');
+    buffer.writeln('    );');
+    buffer.writeln("    _headers['Content-Type'] = _multipart.contentType;");
+    bodyExpr = '_multipart.toBytes()';
+  }
+
   // Build the request
   buffer.writeln('    final RestRequest _request = RestRequest(');
   buffer.writeln("      method: '${method.verb}',");
   buffer.writeln("      path: ${_quoteString(fullPath)},");
   buffer.writeln('      baseUrl: _baseUrl,');
   buffer.writeln('      headers: _headers,');
-  if (bodyParams.isNotEmpty) {
+  if (bodyParams.isNotEmpty || partParams.isNotEmpty) {
     buffer.writeln('      body: $bodyExpr,');
   }
   if (queryParams.isNotEmpty) {
