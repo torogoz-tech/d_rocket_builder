@@ -18,13 +18,7 @@ class FormSourceWriter {
       ..writeln('class $adapterName {')
       ..writeln('  $adapterName({');
 
-    for (final ({
-      FieldElement field,
-      String? label,
-      int order,
-      FormInput input,
-      List<({String name, ConstantReader annotation})> validators
-    }) item in metadata.fields) {
+    for (final FormFieldMetadata item in metadata.fields) {
       output.writeln(
         '    ${nullableType(item.field.type)} initial${_pascal(item.field.displayName)},',
       );
@@ -40,13 +34,7 @@ class FormSourceWriter {
           '    FormValidationMode validationMode = FormValidationMode.onSubmit,')
       ..writeln('  }) : state = _createState(');
 
-    for (final ({
-      FieldElement field,
-      String? label,
-      int order,
-      FormInput input,
-      List<({String name, ConstantReader annotation})> validators
-    }) item in metadata.fields) {
+    for (final FormFieldMetadata item in metadata.fields) {
       output.writeln(
         '    initial${_pascal(item.field.displayName)},',
       );
@@ -64,28 +52,17 @@ class FormSourceWriter {
       ..writeln()
       ..writeln('  static const List<FormFieldDefinition> definitions = '
           '<FormFieldDefinition>[');
-    for (final ({
-      FieldElement field,
-      String? label,
-      int order,
-      FormInput input,
-      List<({String name, ConstantReader annotation})> validators
-    }) item in metadata.fields) {
+    for (final FormFieldMetadata item in metadata.fields) {
       output.writeln(
         "    FormFieldDefinition(name: '${item.field.displayName}', "
         "label: ${_nullableString(item.label)}, order: ${item.order}, "
-        'input: FormInput.${item.input.name}),',
+        'input: FormInput.${item.input.name}, '
+        'binding: ${_writeBinding(item.binding)}),',
       );
     }
     output.writeln('  ];');
 
-    for (final ({
-      FieldElement field,
-      String? label,
-      int order,
-      FormInput input,
-      List<({String name, ConstantReader annotation})> validators
-    }) item in metadata.fields) {
+    for (final FormFieldMetadata item in metadata.fields) {
       output.writeln(
         '  FormFieldState<${item.field.type}> get ${item.field.displayName} => '
         "state.fields['${item.field.displayName}']! as FormFieldState<${item.field.type}>;",
@@ -107,13 +84,7 @@ class FormSourceWriter {
       ..writeln()
       ..writeln('  static FormState<${metadata.className}> _createState(');
 
-    for (final ({
-      FieldElement field,
-      String? label,
-      int order,
-      FormInput input,
-      List<({String name, ConstantReader annotation})> validators
-    }) item in metadata.fields) {
+    for (final FormFieldMetadata item in metadata.fields) {
       output.writeln(
         '    ${nullableType(item.field.type)} initial${_pascal(item.field.displayName)},',
       );
@@ -128,13 +99,7 @@ class FormSourceWriter {
       ..writeln('  ) {')
       ..writeln('    final fields = <String, FormFieldState<Object?>>{');
 
-    for (final ({
-      FieldElement field,
-      String? label,
-      int order,
-      FormInput input,
-      List<({String name, ConstantReader annotation})> validators
-    }) item in metadata.fields) {
+    for (final FormFieldMetadata item in metadata.fields) {
       final String type = item.field.type.toString();
       output
         ..writeln("      '${item.field.displayName}': FormFieldState<$type>(")
@@ -162,13 +127,7 @@ class FormSourceWriter {
       ..writeln('      asyncValidationDebounce: asyncValidationDebounce,')
       ..writeln('      builder: () => ${metadata.className}(');
 
-    for (final ({
-      FieldElement field,
-      String? label,
-      int order,
-      FormInput input,
-      List<({String name, ConstantReader annotation})> validators
-    }) item in metadata.fields) {
+    for (final FormFieldMetadata item in metadata.fields) {
       final String type = item.field.type.toString();
       output.writeln(
         '        ${item.field.displayName}: fields[\'${item.field.displayName}\']!.value as $type,',
@@ -392,6 +351,14 @@ class FormSourceWriter {
 
   String _nullableString(String? value) =>
       value == null ? 'null' : "'${_escape(value)}'";
+
+  String _writeBinding(List<String> binding) {
+    if (binding.isEmpty) return 'const <String>[]';
+    final String values = binding.map(_quoted).join(', ');
+    return '<String>[$values]';
+  }
+
+  String _quoted(String value) => "'${_escape(value)}'";
 
   String _pascal(String value) =>
       value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
