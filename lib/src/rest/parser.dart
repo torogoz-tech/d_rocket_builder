@@ -91,6 +91,7 @@ class ParsedReturnType {
   final String? mapKeyType;
   final String? mapValueType;
   final bool isStream;
+  final bool isPage;
 
   ParsedReturnType({
     required this.dartType,
@@ -102,6 +103,7 @@ class ParsedReturnType {
     this.mapKeyType,
     this.mapValueType,
     this.isStream = false,
+    this.isPage = false,
   });
 }
 
@@ -263,15 +265,13 @@ class ClientParser {
     final ParsedReturnType parsedReturn = _unwrapFuture(returnType);
 
     final DartObject? queryCache = _findAnnotationByName(method, 'QueryCache');
-    final DartObject? invalidates = _findAnnotationByName(method, 'Invalidates');
-    final List<String> queryCacheTags =
-        _readStringList(queryCache, 'tags');
+    final DartObject? invalidates =
+        _findAnnotationByName(method, 'Invalidates');
+    final List<String> queryCacheTags = _readStringList(queryCache, 'tags');
     final Duration? queryCacheStaleTime =
         _readDuration(queryCache, 'staleTime');
-    final Duration? queryCacheTime =
-        _readDuration(queryCache, 'cacheTime');
-    final List<String> invalidationTags =
-        _readStringList(invalidates, 'tags');
+    final Duration? queryCacheTime = _readDuration(queryCache, 'cacheTime');
+    final List<String> invalidationTags = _readStringList(invalidates, 'tags');
     if (queryCache != null && !parsedReturn.isStream) {
       throw InvalidGenerationSourceError(
         '@QueryCache can only be applied to a Stream<T> REST method.',
@@ -433,6 +433,20 @@ class ClientParser {
           isStream: true,
         );
       }
+      if (name == 'RestPage') {
+        final String? inner = type.typeArguments.isNotEmpty
+            ? type.typeArguments.first.getDisplayString()
+            : null;
+        return ParsedReturnType(
+          dartType: display,
+          isVoid: false,
+          isDynamic: false,
+          isList: false,
+          isMap: false,
+          innerType: inner,
+          isPage: true,
+        );
+      }
     }
     return ParsedReturnType(
       dartType: display,
@@ -502,7 +516,8 @@ class ClientParser {
     final DartObject? list = obj.getField(field);
     final List<DartObject?>? raw = list?.toListValue();
     if (raw == null) return const <String>[];
-    return raw.map((DartObject? item) => item?.toStringValue())
+    return raw
+        .map((DartObject? item) => item?.toStringValue())
         .whereType<String>()
         .toList();
   }

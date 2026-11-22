@@ -76,7 +76,7 @@ void _emitMethod(
   buffer.writeln('  @override');
   buffer.writeln(
     '  $returnTypeStr ${method.name}(${_parameterList(method)})'
-        '${method.returnType.isStream ? '' : ' async'} {',
+    '${method.returnType.isStream ? '' : ' async'} {',
   );
 
   // Build headers literal
@@ -211,7 +211,8 @@ void _emitMethod(
     _emitInvalidation(buffer, method);
   } else if (method.returnType.isDynamic) {
     if (method.invalidationTags.isNotEmpty) {
-      buffer.writeln('    final dynamic _result = await invokeRequest<dynamic>(');
+      buffer
+          .writeln('    final dynamic _result = await invokeRequest<dynamic>(');
     } else {
       buffer.writeln('    return invokeRequest<dynamic>(');
     }
@@ -233,8 +234,17 @@ void _emitMethod(
       buffer.writeln('    return invokeRequest<$t>(');
     }
     buffer.writeln('      _request,');
-    buffer.writeln(
-        '      (dynamic data) => dRest.decodeBody<$decoderType>(data),');
+    if (method.returnType.isPage) {
+      final String inner = method.returnType.innerType ?? 'dynamic';
+      buffer.writeln('      (dynamic data) => RestPage<$inner>.fromJson(');
+      buffer.writeln('        data as Map<String, dynamic>,');
+      buffer
+          .writeln('        (Object? item) => dRest.decodeBody<$inner>(item),');
+      buffer.writeln('      ),');
+    } else {
+      buffer.writeln(
+          '      (dynamic data) => dRest.decodeBody<$decoderType>(data),');
+    }
     buffer.writeln('      client: _client,');
     buffer.writeln('    );');
     if (method.invalidationTags.isNotEmpty) {

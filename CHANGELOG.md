@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   their verification boundaries.
 * Added OpenAPI 3.1 export and endpoint metadata import for parsed REST
   clients, including parameters, JSON bodies and component schemas.
+* REST codegen now recognizes `RestPage<T>` and emits typed item decoding.
 
 ### Compatibility
 

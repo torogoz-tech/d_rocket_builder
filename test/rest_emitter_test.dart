@@ -176,4 +176,38 @@ void main() {
     expect(source, contains('dRest.queryCache.invalidate'));
     expect(source, contains("'request.sourceId': request.sourceId"));
   });
+
+  test('emits typed RestPage item decoding', () {
+    final String source = emitClient(
+      ParsedClient(
+        className: 'PageClient',
+        baseUrl: 'https://generated.example',
+        classPath: '',
+        classHeaders: const <String, String>{},
+        classTimeout: null,
+        methods: <ParsedMethod>[
+          ParsedMethod(
+            name: 'list',
+            verb: 'GET',
+            path: '/items',
+            methodHeaders: const <String, String>{},
+            returnType: ParsedReturnType(
+              dartType: 'RestPage<Item>',
+              isVoid: false,
+              isDynamic: false,
+              isList: false,
+              isMap: false,
+              innerType: 'Item',
+              isPage: true,
+            ),
+            parameters: const <ParsedParameter>[],
+            timeout: null,
+          ),
+        ],
+      ),
+    );
+
+    expect(source, contains('RestPage<Item>.fromJson'));
+    expect(source, contains('dRest.decodeBody<Item>(item)'));
+  });
 }
