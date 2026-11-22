@@ -1,3 +1,4 @@
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
@@ -485,7 +486,8 @@ $schema
     buffer.writeln('');
     buffer.writeln('Map<String, Object?> ${meta.className}JsonSchema() {');
     buffer.writeln('  return <String, Object?>{');
-    buffer.writeln("    '\\\$schema': 'https://json-schema.org/draft/2020-12/schema',");
+    buffer.writeln(
+        "    '\\\$schema': 'https://json-schema.org/draft/2020-12/schema',");
     buffer.writeln("    'title': '${meta.className}',");
     buffer.writeln("    'type': 'object',");
     buffer.writeln("    'properties': <String, Object?>{");
@@ -504,8 +506,10 @@ $schema
     }
     buffer.writeln('    },');
     final List<String> required = fields
-        .where((FieldElement field) => field.type.nullabilitySuffix.name == 'none')
-        .map((FieldElement field) => "'${jsonKeyFor(field.displayName, _namingAsString(meta.naming))}'")
+        .where(
+            (FieldElement field) => field.type.nullabilitySuffix.name == 'none')
+        .map((FieldElement field) =>
+            "'${jsonKeyFor(field.displayName, _namingAsString(meta.naming))}'")
         .toList();
     buffer.writeln("    'required': <String>[${required.join(', ')}],");
     buffer.writeln('  };');
@@ -589,7 +593,8 @@ $schema
       buffer.writeln('  @override');
       buffer.writeln('  int get hashCode => Object.hashAll(<Object?>[');
       for (final FieldElement field in fields) {
-        buffer.writeln('    ValueEquality.hash((this as $classType).${field.displayName}),');
+        buffer.writeln(
+            '    ValueEquality.hash((this as $classType).${field.displayName}),');
       }
       buffer.writeln('  ]);');
       buffer.writeln('}');
@@ -601,6 +606,7 @@ $schema
     _ClassMetadata meta, {
     required ClassElement element,
   }) {
+    final String converterBindings = _renderConverterBindings(element);
     // Generic classes can't be auto-registered: type parameters are
     // erased at runtime, so `Serializer.register<ApiResponse[T]>` is
     // meaningless. Users have to register each concrete instantiation
@@ -624,6 +630,7 @@ void register${meta.className}Serializer<T>({
   required T Function(Object?) decode,
   required Object? Function(T) encode,
 }) {
+${converterBindings.isEmpty ? '' : '  $converterBindings\n'}
   Serializer.register<${meta.className}<T>>(
     fromJson: (Map<String, dynamic> json) =>
         ${meta.className}FromJson<T>(json, decode),
@@ -638,6 +645,7 @@ void register${meta.className}Serializer<T>({
     if (unionAnnotation == null) {
       return '''
 void register${meta.className}Serializer() {
+${converterBindings.isEmpty ? '' : '  $converterBindings\n'}
   Serializer.register<${meta.className}>(
     fromJson: ${meta.className}FromJson,
     toJson: ${meta.className}ToJson,
@@ -650,6 +658,7 @@ void register${meta.className}Serializer() {
 
     return '''
 void register${meta.className}Serializer() {
+${converterBindings.isEmpty ? '' : '  $converterBindings\n'}
   Serializer.register<${meta.className}>(
     fromJson: ${meta.className}FromJson,
     toJson: ${meta.className}ToJson,
@@ -660,6 +669,27 @@ void register${meta.className}Serializer() {
     fromJson: ${meta.className}FromJson,
   );
 }''';
+  }
+
+  String _renderConverterBindings(ClassElement element) {
+    final List<String> registrations = <String>[];
+    for (final ElementAnnotation metadata in element.metadata.annotations) {
+      if (metadata.element?.displayName != 'JsonConverterBinding') continue;
+      final DartObject? value = metadata.computeConstantValue();
+      final String? typeName = value?.getField('typeName')?.toStringValue();
+      final String? converter = value?.getField('converter')?.toStringValue();
+      if (typeName == null ||
+          converter == null ||
+          typeName.trim().isEmpty ||
+          converter.trim().isEmpty) {
+        throw InvalidGenerationSourceError(
+          'JsonConverterBinding requires non-empty typeName and converter.',
+          element: element,
+        );
+      }
+      registrations.add('Serializer.registerConverter<$typeName>($converter);');
+    }
+    return registrations.join('\n  ');
   }
 
   // ---------------------------------------------------------------------------
