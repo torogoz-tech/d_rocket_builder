@@ -8,6 +8,8 @@ output of existing annotations.
 - `@QueryCache` on `Stream<T>` REST methods, including cache tags, lifetimes
   and generated URL-keyed loaders.
 - `@Invalidates` on REST mutations, applied only after a successful response.
+- Generated clients route query watches and invalidations through the optional
+  per-client cache in `RestClientConfig`, falling back to `dRest.queryCache`.
 - `@Serializable(copyWith: true, equality: true)` helpers with nullable-value
   sentinels and generated equality mixins.
 - JSON Schema metadata for generated serializable models.

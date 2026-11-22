@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * REST codegen now understands `@QueryCache` and `@Invalidates`, emits
   instance-scoped query streams, normalized URL keys, placeholder tag values
-  and post-success invalidation.
+  and post-success invalidation. Generated clients accept an optional
+  instance-scoped `RestQueryCache` through `RestClientConfig`.
 * `@Serializable(copyWith: true, equality: true)` now emits sentinel-based
   `copyWith`, an equality mixin and a JSON Schema function.
 * Serializer fields can declare a `readValue` hook through `@JsonKey`.
