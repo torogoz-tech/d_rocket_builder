@@ -41,6 +41,31 @@ void main() {
             ],
             timeout: null,
           ),
+          ParsedMethod(
+            name: 'upload',
+            verb: 'POST',
+            path: '/files',
+            methodHeaders: const <String, String>{},
+            returnType: ParsedReturnType(
+              dartType: 'dynamic',
+              isVoid: false,
+              isDynamic: true,
+              isList: false,
+              isMap: false,
+            ),
+            parameters: <ParsedParameter>[
+              ParsedParameter(
+                name: 'file',
+                annotationName: 'file',
+                kind: ParamKind.part,
+                dartType: 'List<int>',
+                isRequired: true,
+                isNullable: false,
+                isNamed: false,
+              ),
+            ],
+            timeout: null,
+          ),
         ],
       ),
     );
@@ -56,6 +81,12 @@ void main() {
     expect(
       (json['components']! as Map<String, Object?>)['schemas'],
       containsPair('Item', <String, Object?>{'type': 'object'}),
+    );
+    final Map<String, Object?> upload = (paths['/v1/files']!
+        as Map<String, Object?>)['post']! as Map<String, Object?>;
+    expect(
+      (upload['requestBody']! as Map<String, Object?>)['content'],
+      contains('multipart/form-data'),
     );
   });
 

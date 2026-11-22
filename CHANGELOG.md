@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Serializer codegen now emits registrations declared with
   `@JsonConverterBinding`.
 * REST codegen now emits multipart bodies for `@Part` parameters.
+* OpenAPI export now describes multipart and form-urlencoded request bodies.
 
 ### Compatibility
 

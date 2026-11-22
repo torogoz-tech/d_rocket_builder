@@ -51,6 +51,43 @@ class OpenApiExporter {
           },
         };
       }
+      final List<ParsedParameter> parts = method.parameters
+          .where(
+              (ParsedParameter parameter) => parameter.kind == ParamKind.part)
+          .toList();
+      final List<ParsedParameter> fields = method.parameters
+          .where(
+              (ParsedParameter parameter) => parameter.kind == ParamKind.field)
+          .toList();
+      if (parts.isNotEmpty || fields.isNotEmpty) {
+        final bool multipart = parts.isNotEmpty;
+        final List<ParsedParameter> formParameters = multipart ? parts : fields;
+        operation['requestBody'] = <String, Object?>{
+          'required': formParameters.any(
+            (ParsedParameter parameter) =>
+                parameter.isRequired && !parameter.isNullable,
+          ),
+          'content': <String, Object?>{
+            multipart
+                ? 'multipart/form-data'
+                : 'application/x-www-form-urlencoded': <String, Object?>{
+              'schema': <String, Object?>{
+                'type': 'object',
+                'properties': <String, Object?>{
+                  for (final ParsedParameter parameter in formParameters)
+                    (parameter.annotationName ?? parameter.name):
+                        multipart && parameter.dartType == 'List<int>'
+                            ? <String, Object?>{
+                                'type': 'string',
+                                'format': 'binary',
+                              }
+                            : _schemaForType(parameter.dartType),
+                },
+              },
+            },
+          },
+        };
+      }
       final String path = _normalizePath(client.classPath + method.path);
       final Map<String, Object?> pathItem =
           (paths[path] as Map<String, Object?>?) ?? <String, Object?>{};
