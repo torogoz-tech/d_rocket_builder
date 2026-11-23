@@ -1,6 +1,6 @@
 name: d_rocket_builder
 description: build_runner code generation for d_rocket serializers, REST clients, ORM metadata, migrations, realtime clients, and model-driven forms.
-version: 2.6.0
+version: 2.6.1
 
 repository: https://github.com/torogoz-tech/d_rocket_builder
 homepage: https://github.com/torogoz-tech/d_rocket_builder

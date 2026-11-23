@@ -36,8 +36,8 @@ main dependencies — it never ships with the app):
 
 ```yaml
 dev_dependencies:
-  d_rocket: ^2.6.0
-  d_rocket_builder: ^2.6.0
+  d_rocket: ^2.6.1
+  d_rocket_builder: ^2.6.1
   build_runner: ^2.4.13
 ```
 
@@ -67,11 +67,11 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
-  d_rocket: ^2.6.0
-  d_rocket_engine_sqlite: ^2.6.0
+  d_rocket: ^2.6.1
+  d_rocket_engine_sqlite: ^2.6.1
 
 dev_dependencies:
-  d_rocket_builder: ^2.6.0
+  d_rocket_builder: ^2.6.1
   build_runner: ^2.4.13
 ```
 
@@ -175,7 +175,7 @@ The complete Forms contract is documented in
 [`d_rocket_builder 2.6.0 release guide`](https://github.com/torogoz-tech/d_rocket_builder/blob/main/doc/RELEASE_2.6.0.md).
 
 For adoption guidance and complete REST, SQLite, forms and realtime examples,
-see the core framework's [use-case guide](https://github.com/torogoz-tech/d_rocket/blob/main/doc/15-para-que-usar.md).
+see the core framework's [use-case guide](https://github.com/torogoz-tech/d_rocket/blob/main/doc/15-use-cases.md).
 
 ## Lint rules
 
