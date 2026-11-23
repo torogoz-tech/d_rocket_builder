@@ -1,6 +1,6 @@
 # d_rocket_builder
 
-> **Codegen for the [d_rocket 2.4](https://pub.dev/packages/d_rocket) framework.**
+> **Codegen for the [d_rocket 2.6](https://pub.dev/packages/d_rocket) framework.**
 
 <p align="center">
   <img src="assets/banner.png" alt="d_rocket_builder banner" width="100%">
@@ -36,8 +36,8 @@ main dependencies — it never ships with the app):
 
 ```yaml
 dev_dependencies:
-  d_rocket: ^2.5.0
-  d_rocket_builder: ^2.5.0
+  d_rocket: ^2.6.0
+  d_rocket_builder: ^2.6.0
   build_runner: ^2.4.13
 ```
 
@@ -67,11 +67,11 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
-  d_rocket: ^2.5.0
-  d_rocket_engine_sqlite: ^2.1.0
+  d_rocket: ^2.6.0
+  d_rocket_engine_sqlite: ^2.6.0
 
 dev_dependencies:
-  d_rocket_builder: ^2.5.0
+  d_rocket_builder: ^2.6.0
   build_runner: ^2.4.13
 ```
 
@@ -172,7 +172,10 @@ For a model `LoginRequest` annotated with `@Form`:
 The complete Forms contract is documented in
 [`doc/RELEASE_2.2.0.md`](doc/RELEASE_2.2.0.md). The observable field and
 `d_rocket_flutter` controller binding additions are documented in the
-[`d_rocket_builder 2.5.0 release guide`](https://github.com/torogoz-tech/d_rocket_builder/blob/main/doc/RELEASE_2.5.0.md).
+[`d_rocket_builder 2.6.0 release guide`](https://github.com/torogoz-tech/d_rocket_builder/blob/main/doc/RELEASE_2.6.0.md).
+
+For adoption guidance and complete REST, SQLite, forms and realtime examples,
+see the core framework's [use-case guide](https://github.com/torogoz-tech/d_rocket/blob/main/doc/15-para-que-usar.md).
 
 ## Lint rules
 
